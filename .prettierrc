@@ -1,0 +1,11 @@
+{
+  "overrides": [
+    {
+      "files": ["*.php"],
+      "excludeFiles": ["*.blade.php"],
+      "options": {
+        "phpVersion": "8.1"
+      }
+    }
+  ]
+}
