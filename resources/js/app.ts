@@ -17,6 +17,7 @@ createInertiaApp({
       import.meta.glob<DefineComponent>("./Pages/**/*.vue")
     ),
   setup({ el, App, props, plugin }) {
+    // TODO: change to createSSRApp. See https://inertiajs.com/server-side-rendering
     createApp({ render: () => h(App, props) })
       .use(plugin)
       .use(ZiggyVue, Ziggy)
