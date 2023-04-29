@@ -12,11 +12,6 @@
 
     <!-- Scripts -->
     @routes
-    {{-- TODO: move to a separate file? --}}
-    <script>
-      let ziggyRoute = globalThis.route;
-      globalThis.route = (name, params, absolute = false, config) => ziggyRoute(name, params, absolute, config);
-    </script>
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
     @inertiaHead
