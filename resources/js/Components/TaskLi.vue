@@ -4,6 +4,11 @@ import { Task } from "@/types/models";
 import { toRefs } from "vue";
 import { reactive, computed } from "vue";
 
+defineEmits<{
+  (e: "complete" | "uncomplete" | "delete", id: string): void;
+  // (e: "delete"): void;
+}>();
+
 const props = defineProps<{ task: Task }>();
 const task = reactive(props.task);
 const { id, name, completed_at } = toRefs(task);
@@ -13,14 +18,18 @@ const nameElementId = computed(() => `task-${id}-name`);
 
 <template>
   <li :id="`task-${id}`" class="flex items-center py-3 border-b">
-    <Form :action="route('tasks.update', id, false)" method="PATCH">
+    <Form
+      :action="route('tasks.update', id, false)"
+      method="PATCH"
+      @submit.prevent="$emit(completed_at ? 'uncomplete' : 'complete', id)"
+    >
       <button
         type="submit"
-        :aria-describedby="nameElementId"
+        class="p-1 border rounded-full has-tooltip"
         name="completed"
         :value="completed_at ? 0 : 1"
-        class="p-1 border rounded-full has-tooltip"
         :aria-label="completed_at ? 'Mark as uncompleted' : 'Mark as completed'"
+        :aria-describedby="nameElementId"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +50,12 @@ const nameElementId = computed(() => `task-${id}-name`);
       {{ name }}
     </p>
 
-    <Form :action="route('tasks.destroy', id, false)" method="DELETE" class="">
+    <Form
+      :action="route('tasks.destroy', id, false)"
+      method="DELETE"
+      class=""
+      @submit.prevent="$emit('delete', id)"
+    >
       <button
         type="submit"
         :aria-describedby="nameElementId"

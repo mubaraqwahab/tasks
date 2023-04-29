@@ -3,8 +3,51 @@ import Layout from "@/Components/Layout.vue";
 import Form from "@/Components/Form.vue";
 import TaskLi from "@/Components/TaskLi.vue";
 import type { Task } from "@/types/models";
+import { ref } from "vue";
+import { computed } from "vue";
 
-defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
+const props = defineProps<{ tasks: Task[] }>();
+const tasks = ref(props.tasks);
+
+// TODO: sort both
+const upcomingTasks = computed(() =>
+  tasks.value.filter((task) => task.completed_at === null)
+);
+const completedTasks = computed(() =>
+  tasks.value.filter((task) => task.completed_at !== null)
+);
+
+function completeTask(taskId: string) {
+  tasks.value = tasks.value.map((task) => {
+    if (task.id === taskId)
+      return { ...task, completed_at: new Date().toISOString() };
+    return task;
+  });
+}
+
+function uncompleteTask(taskId: string) {
+  tasks.value = tasks.value.map((task) => {
+    if (task.id === taskId) return { ...task, completed_at: null };
+    return task;
+  });
+}
+
+function deleteTask(taskId: string) {
+  tasks.value = tasks.value.filter((task) => task.id !== taskId);
+}
+
+function createTask(e: SubmitEvent) {
+  const form = e.target as HTMLFormElement;
+  const formData = new FormData(form);
+
+  tasks.value.push({
+    id: "random",
+    name: formData.get("name") as string,
+    created_at: new Date().toISOString(),
+    completed_at: null,
+    edited_at: null,
+  });
+}
 </script>
 
 <template>
@@ -18,6 +61,7 @@ defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
       method="POST"
       :action="route('tasks.store', {}, false)"
       class="mb-6 relative"
+      @submit.prevent="createTask"
     >
       <input
         type="text"
@@ -57,7 +101,12 @@ defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
       <summary class="w-fit font-semibold mb-3">Upcoming</summary>
       <!-- TODO: add :empty class or something -->
       <ul v-for="task in upcomingTasks">
-        <TaskLi :task="task" :key="task.id" />
+        <TaskLi
+          :task="task"
+          :key="task.id"
+          @complete="completeTask"
+          @delete="deleteTask"
+        />
       </ul>
       <p v-if="upcomingTasks.length === 0">No tasks?</p>
     </details>
@@ -65,7 +114,12 @@ defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
     <details>
       <summary class="w-fit font-semibold mb-3">Completed</summary>
       <ul v-for="task in completedTasks">
-        <TaskLi :task="task" :key="task.id" />
+        <TaskLi
+          :task="task"
+          :key="task.id"
+          @uncomplete="uncompleteTask"
+          @delete="deleteTask"
+        />
       </ul>
       <p v-if="completedTasks.length === 0">No tasks?</p>
     </details>

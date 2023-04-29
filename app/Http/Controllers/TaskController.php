@@ -17,15 +17,18 @@ class TaskController extends Controller
      */
     public function index(): Response
     {
+        $completedTasksQuery = Task::with("user")
+            ->whereNotNull("completed_at")
+            ->latest("completed_at");
+
+        $tasks = Task::with("user")
+            ->whereNull("completed_at")
+            ->latest()
+            ->union($completedTasksQuery)
+            ->get();
+
         return Inertia::render("Tasks", [
-            "upcomingTasks" => Task::with("user")
-                ->where("completed_at", "=", null)
-                ->latest()
-                ->get(),
-            "completedTasks" => Task::with("user")
-                ->where("completed_at", "!=", null)
-                ->latest("completed_at")
-                ->get(),
+            "tasks" => $tasks,
         ]);
     }
 
