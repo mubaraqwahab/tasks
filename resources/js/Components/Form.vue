@@ -15,7 +15,7 @@ const htmlMethods = ["GET", "POST"];
       v-if="method !== 'GET'"
       type="hidden"
       name="_token"
-      :value="$page.props.csrfToken"
+      :value="$page.props.auth.csrfToken"
     />
     <input
       v-if="!htmlMethods.includes(method)"
@@ -23,7 +23,6 @@ const htmlMethods = ["GET", "POST"];
       name="_method"
       :value="method"
     />
-
     <slot />
   </form>
 </template>

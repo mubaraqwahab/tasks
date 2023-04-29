@@ -57,7 +57,7 @@ defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
       <summary class="w-fit font-semibold mb-3">Upcoming</summary>
       <!-- TODO: add :empty class or something -->
       <ul v-for="task in upcomingTasks">
-        <TaskLi v-bind="task" :key="task.id" />
+        <TaskLi :task="task" :key="task.id" />
       </ul>
       <p v-if="upcomingTasks.length === 0">No tasks?</p>
     </details>
@@ -65,7 +65,7 @@ defineProps<{ upcomingTasks: Task[]; completedTasks: Task[] }>();
     <details>
       <summary class="w-fit font-semibold mb-3">Completed</summary>
       <ul v-for="task in completedTasks">
-        <TaskLi v-bind="task"></TaskLi>
+        <TaskLi :task="task" :key="task.id" />
       </ul>
       <p v-if="completedTasks.length === 0">No tasks?</p>
     </details>

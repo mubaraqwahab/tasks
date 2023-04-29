@@ -1,7 +1,7 @@
 import { PageProps as InertiaPageProps } from "@inertiajs/core";
 import { AxiosInstance } from "axios";
 import ziggyRoute, { Config as ZiggyConfig } from "ziggy-js";
-import { PageProps as AppPageProps } from "./";
+import type { User } from "./models";
 
 declare global {
   interface Window {
@@ -17,6 +17,14 @@ declare module "vue" {
     route: typeof ziggyRoute;
   }
 }
+
+type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> =
+  T & {
+    auth: {
+      user: User;
+      csrfToken: string;
+    };
+  };
 
 declare module "@inertiajs/core" {
   interface PageProps extends InertiaPageProps, AppPageProps {}

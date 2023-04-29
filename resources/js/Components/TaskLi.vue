@@ -1,31 +1,17 @@
 <script setup lang="ts">
 import Form from "./Form.vue";
 import { Task } from "@/types/models";
-import { computed } from "vue";
+import { toRefs } from "vue";
+import { reactive, computed } from "vue";
 
-const props = defineProps<{
-  id: string;
-  name: string;
-  // user_id: User["id"];
-  created_at: string | null;
-  edited_at: string | null;
-  completed_at: string | null;
-}>();
+const props = defineProps<{ task: Task }>();
+const task = reactive(props.task);
+const { id, name, completed_at } = toRefs(task);
 
-const nameElementId = computed(() => `task-${props.id}-name`);
-// function toISOString(dateStr: string) {}
+const nameElementId = computed(() => `task-${id}-name`);
 </script>
 
 <template>
-  <!--
-  $toISOString = function ($date) {
-    if (is_null($date) || is_string($date)) return $date;
-    return $date->toISOString();
-  };
-  $createdAt = $toISOString($createdAt);
-  $completedAt = $toISOString($completedAt);
--->
-
   <li :id="`task-${id}`" class="flex items-center py-3 border-b">
     <Form :action="route('tasks.update', id, false)" method="PATCH">
       <button
