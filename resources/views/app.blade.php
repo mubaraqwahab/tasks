@@ -12,7 +12,13 @@
 
     <!-- Scripts -->
     @routes
-    @vite(['resources/js/app.ts', "resources/js/Pages/{$page['component']}.vue"])
+    {{-- TODO: move to a separate file? --}}
+    <script>
+      let ziggyRoute = globalThis.route;
+      globalThis.route = (name, params, absolute = false, config) => ziggyRoute(name, params, absolute, config);
+    </script>
+    @viteReactRefresh
+    @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
     @inertiaHead
   </head>
   <body class="font-sans antialiased">

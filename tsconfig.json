@@ -3,21 +3,20 @@
     "allowJs": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "strict": true,
     "isolatedModules": true,
     "target": "ESNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "skipLibCheck": true,
     "paths": {
       "@/*": ["./resources/js/*"]
     }
   },
   "include": [
     "resources/js/**/*.ts",
-    "resources/js/**/*.d.ts",
-    "resources/js/**/*.vue"
+    "resources/js/**/*.tsx",
+    "resources/js/**/*.d.ts"
   ]
 }
