@@ -63,7 +63,7 @@ class TaskController extends Controller
             ["completed" => "required|boolean"],
             [
                 "completed" =>
-                    "Strange, we couldn't update your task. Refresh your browser window, then try again.",
+                    "Strange, we couldn't update your task. Please try again.",
                 // "completed.boolean" =>
                 //     "Strange, we couldn't update your task. Refresh your browser window, then try again.",
             ],
