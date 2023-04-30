@@ -8,6 +8,7 @@ type FormProps = React.FormHTMLAttributes<HTMLFormElement> &
 
 const htmlMethods = ["GET", "POST"];
 
+/** A form component with method spoofing and CSRF input */
 export default function Form({ method = "GET", children, ...rest }: FormProps) {
   const { csrfToken } = useContext(AuthContext);
   return (

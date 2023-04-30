@@ -2,32 +2,23 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import { PageProps, TaskChange } from "@/types";
+import { PageProps } from "@/types";
 import { Task } from "@/types";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
-import { assign } from "xstate";
-import { log } from "xstate/lib/actions";
-import { FormEvent, useEffect, useState } from "react";
-import { useOnline } from "@/utils";
+import { ReactNode } from "react";
+import { useOnline, p } from "@/utils";
+import { For } from "@/Components/For";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
 
-/** Prevent default */
-function p<E extends FormEvent>(listener: (e: E) => void) {
-  return function (e: E) {
-    e.preventDefault();
-    listener(e);
-  };
-}
+let num = 1;
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const [state, send] = useMachine(tasksMachine, { context: { tasks } });
   const isOnline = useOnline();
-
-  console.log({ isOnline, state: state.toStrings().join(" ") });
 
   // TODO: replace orderby with custom impl.
   const upcomingTasks = orderBy(
@@ -36,31 +27,32 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     ["desc"]
   );
 
-  // const completedTasks = orderBy(
-  //   state.context.tasks.filter((task) => task.completed_at !== null),
-  //   ["completed_at"],
-  //   ["desc"]
-  // );
-
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     send({
       type: "CHANGE",
       data: {
-        id: "abc",
+        id: "" + num++,
         type: "create",
-        taskId: "cde",
+        taskId: "" + num++,
         taskName: formData.get("name") as string,
         timestamp: new Date().toISOString(),
       },
     });
+    form.reset();
   });
 
   return (
-    <Layout auth={auth} title="My tasks">
-      {/* <!-- Consider putting the status (syncing/synced/offline) next to the h1 --> */}
-      <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
+    <Layout auth={auth} title="Upcoming tasks">
+      <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
+
+      {/* Status bar */}
+      <p className="mb-3 flex gap-x-1.5">
+        Status:
+        <span>{isOnline ? "online" : "offline"}</span> &middot;
+        <span>{state.toStrings().join(", ")}</span>
+      </p>
 
       {/* <div className="mb-3">Errors? { JSON.stringify($page.props.errors) }</div> */}
 
@@ -107,26 +99,12 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         </button>
       </Form>
 
-      <details open className="mb-8">
-        <summary className="w-fit font-semibold mb-3">Upcoming</summary>
-        {/* <!-- TODO: add :empty class or something --> */}
-        <ul>
-          {upcomingTasks.map((task) => (
-            <TaskLi task={task} key={task.id} />
-          ))}
-        </ul>
-        {upcomingTasks.length === 0 && <p>No tasks?</p>}
-      </details>
-
-      {/* <details>
-        <summary className="w-fit font-semibold mb-3">Completed</summary>
-        <ul>
-          {completedTasks.map((task) => (
-            <TaskLi task={task} key={task.id} />
-          ))}
-        </ul>
-        {completedTasks.length === 0 && <p>No tasks?</p>}
-      </details> */}
+      <For
+        each={upcomingTasks}
+        render={(task) => <TaskLi task={task} key={task.id} />}
+        fallback={<p>No tasks?</p>}
+        className="mb-8"
+      />
     </Layout>
   );
 }

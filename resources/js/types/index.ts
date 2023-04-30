@@ -23,7 +23,7 @@ interface Model {
   // updated_at: string | null
 }
 
-// TODO: change the API of this
+// TODO: change the API of this.
 // Consider how you'd store it in the database and
 // how you'd make it play nicely with TS and XState
 export type TaskChange = TaskChangeWrapper & {

@@ -1,7 +1,6 @@
 import { createMachine, assign } from "xstate";
 import { log } from "xstate/lib/actions";
 import { Task, TaskChange } from "@/types";
-import { useMachine } from "@xstate/react";
 
 export const tasksMachine = createMachine(
   {
@@ -114,24 +113,14 @@ export const tasksMachine = createMachine(
       applyChange: assign({
         tasks: (context, event) => {
           const change = event.data;
-          if (change.type === "create") {
-            return [
-              ...context.tasks,
-              {
-                id: change.taskId,
-                name: change.taskName,
-                created_at: change.timestamp,
-                completed_at: null,
-                edited_at: null,
-              },
-            ];
-          }
-          return context.tasks;
+          return applyChange(context.tasks, change);
         },
       }),
       applyOfflineChanges: assign({
-        tasks: (context, event) => {
-          return context.tasks;
+        tasks: (context) => {
+          const queue = getOfflineQueue();
+          const updatedTasks = queue.reduce(applyChange, context.tasks);
+          return updatedTasks;
         },
       }),
       pushToOfflineQueue: (context, event) => {
@@ -150,12 +139,16 @@ export const tasksMachine = createMachine(
       syncOfflineQueue: (context, event) => {
         return new Promise((resolve, reject) => {
           setTimeout(() => {
-            // resolve(
-            //   Object.fromEntries(
-            //     context.tasks.map((t, i) => [t.id, i % 0 ? "ok" : "error"])
-            //   )
-            // );
-            reject(new TypeError("Network wahala"));
+            const random = Math.round(Math.random() * 10);
+            if (random % 2) {
+              resolve(
+                Object.fromEntries(
+                  context.tasks.map((t, i) => [t.id, i % 0 ? "ok" : "error"])
+                )
+              );
+            } else {
+              reject(new TypeError("Network wahala"));
+            }
           }, 2000);
         });
       },
@@ -175,9 +168,26 @@ function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
   localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
 }
 
-// @ts-ignore
-window.getq = getOfflineQueue;
-// @ts-ignore
-window.setq = setOfflineQueue;
+function applyChange(tasks: Task[], change: TaskChange): Task[] {
+  if (change.type === "create") {
+    return [
+      ...tasks,
+      {
+        id: change.taskId,
+        name: change.taskName,
+        created_at: change.timestamp,
+        completed_at: null,
+        edited_at: null,
+      },
+    ];
+  } else {
+    throw new Error();
+  }
+}
 
-console.log(import.meta.env.DEV);
+if (import.meta.env.DEV) {
+  // @ts-ignore
+  window.getq = getOfflineQueue;
+  // @ts-ignore
+  window.setq = setOfflineQueue;
+}
