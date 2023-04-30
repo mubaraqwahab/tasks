@@ -24,7 +24,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
   );
 
   return (
-    <Layout auth={auth} title="Tasks">
+    <Layout auth={auth} title="My tasks">
       {/* <!-- Consider putting the status (syncing/synced/offline) next to the h1 --> */}
       <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
