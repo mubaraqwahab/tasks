@@ -26,16 +26,28 @@ interface Model {
 // TODO: change the API of this.
 // Consider how you'd store it in the database and
 // how you'd make it play nicely with TS and XState
-export type TaskChange = TaskChangeWrapper & {
-  type: "create";
-  taskName: string;
+export type TaskChange = TaskChangeWrapper<
+  { type: "create"; taskName: string } | { type: "complete" | "delete" }
+>;
+
+type TaskChangeWrapper<T> = T & {
+  id: string;
+  taskId: string;
   timestamp: string;
 };
 
-type TaskChangeWrapper = {
-  id: string;
+interface TaskLiEvent {
+  type: string;
   taskId: string;
-};
+}
+
+export interface CompleteTaskEvent extends TaskLiEvent {
+  type: "complete";
+}
+
+export interface DeleteTaskEvent extends TaskLiEvent {
+  type: "delete";
+}
 
 export type PageProps<
   T extends Record<string, unknown> = Record<string, unknown>

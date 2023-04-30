@@ -1,16 +1,32 @@
-import { Task } from "@/types";
+import { CompleteTaskEvent, DeleteTaskEvent, Task } from "@/types";
 import Form from "@/Components/Form";
+import { p } from "@/utils";
 
 type TaskLiProps = {
   task: Task;
+  onComplete?: (e: CompleteTaskEvent) => void;
+  onDelete?: (e: DeleteTaskEvent) => void;
 };
 
-export default function TaskLi({ task }: TaskLiProps) {
+export default function TaskLi({ task, onComplete, onDelete }: TaskLiProps) {
   const { id, name, completed_at } = task;
   const nameElementId = `task-${id}-name`;
+
+  const handleComplete = p(() => {
+    onComplete?.({ type: "complete", taskId: id });
+  });
+
+  const handleDelete = p(() => {
+    onDelete?.({ type: "delete", taskId: id });
+  });
+
   return (
     <li id={`task-${id}`} className="flex items-center py-3 border-b">
-      <Form action={route("tasks.update", id)} method="PATCH">
+      <Form
+        action={route("tasks.update", id)}
+        method="PATCH"
+        onSubmit={handleComplete}
+      >
         <button
           type="submit"
           className="p-1 border rounded-full has-tooltip"
@@ -40,7 +56,12 @@ export default function TaskLi({ task }: TaskLiProps) {
         {name}
       </p>
 
-      <Form action={route("tasks.destroy", id)} method="DELETE" className="">
+      <Form
+        action={route("tasks.destroy", id)}
+        method="DELETE"
+        className=""
+        onSubmit={handleDelete}
+      >
         <button
           type="submit"
           aria-describedby={nameElementId}

@@ -2,13 +2,13 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import { PageProps } from "@/types";
+import { CompleteTaskEvent, DeleteTaskEvent, PageProps } from "@/types";
 import { Task } from "@/types";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
-import { ReactNode } from "react";
 import { useOnline, p } from "@/utils";
 import { For } from "@/Components/For";
+import { nanoid } from "nanoid";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -33,15 +33,39 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "CHANGE",
       data: {
-        id: "" + num++,
+        id: nanoid(),
         type: "create",
-        taskId: "" + num++,
+        taskId: nanoid(),
         taskName: formData.get("name") as string,
         timestamp: new Date().toISOString(),
       },
     });
     form.reset();
   });
+
+  const handleCompleteTask = (e: CompleteTaskEvent) => {
+    send({
+      type: "CHANGE",
+      data: {
+        id: nanoid(),
+        type: "complete",
+        taskId: e.taskId,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  };
+
+  const handleDeleteTask = (e: DeleteTaskEvent) => {
+    send({
+      type: "CHANGE",
+      data: {
+        id: nanoid(),
+        type: "delete",
+        taskId: e.taskId,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  };
 
   return (
     <Layout auth={auth} title="Upcoming tasks">
@@ -101,7 +125,14 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
       <For
         each={upcomingTasks}
-        render={(task) => <TaskLi task={task} key={task.id} />}
+        render={(task) => (
+          <TaskLi
+            task={task}
+            key={task.id}
+            onComplete={handleCompleteTask}
+            onDelete={handleDeleteTask}
+          />
+        )}
         fallback={<p>No tasks?</p>}
         className="mb-8"
       />
