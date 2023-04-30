@@ -1,5 +1,20 @@
 # Note
 
+## App behaviour
+
+On page load, retrieve the queue of unsynced offline changes, and apply it to the task list. Then sync the queue with the server.
+
+Save any new changes made to the tasks (e.g. create, complete, delete) in the offline queue first. Then apply the change to the task list and sync the queue with the server. (Or should you apply before saving offline?) Note that changes may occur at any time, even while syncing.
+
+Sync only when the device is online and isn't already syncing. The latter condition prevents race conditions on the server. (The condition doesn't help across clients, however.) If the device is offline, then wait until it comes online before syncing.
+
+A sync request may have one of several outcomes. Handle these outcomes as follows:
+
+- **A network error:** The device is likely offline. Inform the user of the network error. Try to sync again after some time. The user may enconunter this error often.
+- **A 5xx error:** Something's wrong (hopefully temporarily) with the server. Inform the user and try again after some time. This error should be very rare if the entire backend is robust.
+- **A 4xx error:** The synced data is entirely corrupted. Inform the user of the error and let them confirm they want to discard the changes. This is really the only reasonable choice, as further attempts to sync will only result in the same error. (A 4xx error might also be due to auth issues. You should handle such an error differently, of course) Note that a regular, well-behaved user should (almost) never encounter this error if the frontend is robust, as the error occurs only when the offline queue is tampered with.
+- **A 200 response:** Some (or none) of the changes synced successfully, while others didn't. Remove the synced changes from the offline queue, but update the unsynced ones to include their respective errors. Inform the user of the unsynced changes (if any), and let them confirm they want to discard the changes. Again, further attempts to sync won't fix these errors. Note that these errors will occur when there are race conditions, such as when a user makes some changes on offline Device A, then makes some other changes on the same tasks on online Device B, and then Device A comes online. The errors could also occur when the user tampers with the offline queue.
+
 ## Todoist
 
 Todoist shows no indicator when online. But when offline, it shows a warning sign (button) indicating that changes will be saved locally but synced when online again. Clicking the button attempts to sync.
