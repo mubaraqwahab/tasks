@@ -10,16 +10,16 @@ export const tasksMachine = createMachine(
       initializing: {
         always: [
           {
-            target: "beforeNormalSyncing",
-            cond: "offlineQueueIsNotEmpty",
-            actions: "applyOfflineChanges",
+            target: "ready",
+            cond: "offlineQueueIsEmpty",
           },
           {
-            target: "ready",
+            target: "beforeSyncing",
+            actions: "applyOfflineChanges",
           },
         ],
       },
-      beforeNormalSyncing: {
+      beforeSyncing: {
         always: [
           {
             target: "syncing",
@@ -35,8 +35,8 @@ export const tasksMachine = createMachine(
           src: "syncOfflineQueue",
           onDone: [
             {
-              target: "synced",
-              actions: "TODO",
+              target: "afterSyncing",
+              actions: "updateOfflineQueueWithSyncResult",
             },
           ],
           onError: [
@@ -44,18 +44,6 @@ export const tasksMachine = createMachine(
               target: "error",
             },
           ],
-        },
-      },
-      ready: {
-        on: {
-          CHANGE: {
-            target: "beforeNormalSyncing",
-            actions: ["applyChange", "pushToOfflineQueue"],
-          },
-          ONLINE: {
-            target: "syncing",
-            cond: "offlineQueueIsNotEmpty",
-          },
         },
       },
       error: {
@@ -69,17 +57,48 @@ export const tasksMachine = createMachine(
               actions: "TODO",
             },
           ],
-          DISCARD_UNSYNCABLE_CHANGES: {
-            target: "ready",
-          },
         },
       },
-      synced: {
+      allSynced: {
         after: {
           "1000": {
             target: "#tasks.ready",
             actions: [],
             internal: false,
+          },
+        },
+      },
+      afterSyncing: {
+        always: [
+          {
+            target: "allSynced",
+            cond: "offlineQueueIsEmpty",
+          },
+          {
+            target: "#tasks.ready.someFailedToSync",
+          },
+        ],
+      },
+      ready: {
+        initial: "normal",
+        states: {
+          normal: {},
+          someFailedToSync: {
+            on: {
+              DISCARD_FAILED_CHANGES: {
+                target: "normal",
+              },
+            },
+          },
+        },
+        on: {
+          CHANGE: {
+            target: "beforeSyncing",
+            actions: ["applyChange", "pushToOfflineQueue"],
+          },
+          ONLINE: {
+            target: "syncing",
+            cond: "offlineQueueIsNotEmpty",
           },
         },
       },
@@ -89,16 +108,14 @@ export const tasksMachine = createMachine(
         actions: ["applyChange", "pushToOfflineQueue"],
       },
     },
-    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     schema: {
-      context: {} as { tasks: Task[] },
       events: {} as
         | { type: "CHANGE"; data: TaskChange }
         | { type: "RETRY_SYNC" }
-        | { type: "DISCARD_UNSYNCABLE_CHANGES" }
-        | { type: "ONLINE" },
+        | { type: "ONLINE" }
+        | { type: "DISCARD_FAILED_CHANGES" },
       services: {} as {
-        syncOfflineChanges: {
+        syncOfflineQueue: {
           data: {
             status: Record<string, "ok" | "error">;
           };
@@ -107,6 +124,8 @@ export const tasksMachine = createMachine(
     },
     predictableActionArguments: true,
     preserveActionOrder: true,
+    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
+    context: {} as { tasks: Task[] },
   },
   {
     actions: {
@@ -126,14 +145,25 @@ export const tasksMachine = createMachine(
       pushToOfflineQueue: (context, event) => {
         setOfflineQueue((queue) => [...queue, event.data]);
       },
+      updateOfflineQueueWithSyncResult: (context, event) => {
+        setOfflineQueue((queue) =>
+          queue.reduce((queue, change) => {
+            const status = event.data.status[change.id];
+            if (status === "ok") {
+              return queue;
+            } else {
+              const updatedChange = { ...change, error: status };
+              return [...queue, updatedChange];
+            }
+          }, [] as TaskChange[])
+        );
+      },
       TODO: log("TODO"),
     },
     guards: {
       isOnline: () => navigator.onLine,
-      offlineQueueIsNotEmpty: () => {
-        const queue = getOfflineQueue();
-        return queue.length !== 0;
-      },
+      offlineQueueIsEmpty,
+      offlineQueueIsNotEmpty: () => !offlineQueueIsEmpty(),
     },
     services: {
       syncOfflineQueue: (context, event) => {
@@ -141,11 +171,12 @@ export const tasksMachine = createMachine(
           setTimeout(() => {
             const random = Math.round(Math.random() * 10);
             if (random % 2) {
-              resolve(
-                Object.fromEntries(
-                  context.tasks.map((t, i) => [t.id, i % 0 ? "ok" : "error"])
-                )
-              );
+              const queue = getOfflineQueue();
+              resolve({
+                status: Object.fromEntries<"ok" | "error">(
+                  queue.map((c, i) => [c.id, "ok"])
+                ),
+              });
             } else {
               reject(new TypeError("Network wahala"));
             }
@@ -168,6 +199,11 @@ function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
   localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
 }
 
+function offlineQueueIsEmpty() {
+  const queue = getOfflineQueue();
+  return queue.length === 0;
+}
+
 function applyChange(tasks: Task[], change: TaskChange): Task[] {
   if (change.type === "create") {
     return [
@@ -180,6 +216,14 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
         edited_at: null,
       },
     ];
+  } else if (change.type === "complete") {
+    return tasks.map((task) =>
+      task.id === change.taskId
+        ? { ...task, completed_at: change.timestamp }
+        : task
+    );
+  } else if (change.type === "delete") {
+    return tasks.filter((task) => task.id !== change.taskId);
   } else {
     throw new Error();
   }
