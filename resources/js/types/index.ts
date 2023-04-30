@@ -23,6 +23,20 @@ interface Model {
   // updated_at: string | null
 }
 
+// TODO: change the API of this
+// Consider how you'd store it in the database and
+// how you'd make it play nicely with TS and XState
+export type TaskChange = TaskChangeWrapper & {
+  type: "create";
+  taskName: string;
+  timestamp: string;
+};
+
+type TaskChangeWrapper = {
+  id: string;
+  taskId: string;
+};
+
 export type PageProps<
   T extends Record<string, unknown> = Record<string, unknown>
 > = T & {

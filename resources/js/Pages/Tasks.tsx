@@ -1,27 +1,61 @@
 import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
-import { PageProps } from "@/types";
+import { tasksMachine } from "@/tasks-machine";
+import { PageProps, TaskChange } from "@/types";
 import { Task } from "@/types";
 import orderBy from "lodash.orderby";
+import { useMachine } from "@xstate/react";
+import { assign } from "xstate";
+import { log } from "xstate/lib/actions";
+import { FormEvent, useEffect, useState } from "react";
+import { useOnline } from "@/utils";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
 
+/** Prevent default */
+function p<E extends FormEvent>(listener: (e: E) => void) {
+  return function (e: E) {
+    e.preventDefault();
+    listener(e);
+  };
+}
+
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
+  const [state, send] = useMachine(tasksMachine, { context: { tasks } });
+  const isOnline = useOnline();
+
+  console.log({ isOnline, state: state.toStrings().join(" ") });
+
   // TODO: replace orderby with custom impl.
   const upcomingTasks = orderBy(
-    tasks.filter((task) => task.completed_at === null),
+    state.context.tasks.filter((task) => task.completed_at === null),
     ["created_at"],
     ["desc"]
   );
 
-  const completedTasks = orderBy(
-    tasks.filter((task) => task.completed_at !== null),
-    ["completed_at"],
-    ["desc"]
-  );
+  // const completedTasks = orderBy(
+  //   state.context.tasks.filter((task) => task.completed_at !== null),
+  //   ["completed_at"],
+  //   ["desc"]
+  // );
+
+  const handleCreateTask = p((e) => {
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    send({
+      type: "CHANGE",
+      data: {
+        id: "abc",
+        type: "create",
+        taskId: "cde",
+        taskName: formData.get("name") as string,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  });
 
   return (
     <Layout auth={auth} title="My tasks">
@@ -34,6 +68,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         method="POST"
         action={route("tasks.store")}
         className="mb-6 relative"
+        onSubmit={handleCreateTask}
       >
         <input
           type="text"
@@ -83,7 +118,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         {upcomingTasks.length === 0 && <p>No tasks?</p>}
       </details>
 
-      <details>
+      {/* <details>
         <summary className="w-fit font-semibold mb-3">Completed</summary>
         <ul>
           {completedTasks.map((task) => (
@@ -91,7 +126,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           ))}
         </ul>
         {completedTasks.length === 0 && <p>No tasks?</p>}
-      </details>
+      </details> */}
     </Layout>
   );
 }
