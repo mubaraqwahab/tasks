@@ -1,7 +1,8 @@
-import { createMachine, assign } from "xstate";
+import { createMachine, assign, raise } from "xstate";
 import { log } from "xstate/lib/actions";
 import { Task, TaskChange } from "@/types";
 
+// Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
 export const tasksMachine = createMachine(
   {
     id: "tasks",
@@ -26,7 +27,7 @@ export const tasksMachine = createMachine(
             cond: "isOnline",
           },
           {
-            target: "ready",
+            target: "#tasks.ready.hist",
           },
         ],
       },
@@ -41,24 +42,20 @@ export const tasksMachine = createMachine(
           ],
           onError: [
             {
+              target: "#tasks.ready.networkError",
+              cond: "isNetworkError",
+            },
+            {
               target: "error",
             },
-          ],
-        },
-      },
-      error: {
-        on: {
-          RETRY_SYNC: [
             {
-              target: "syncing",
-              cond: "isOnline",
-            },
-            {
-              actions: "TODO",
+              target: "#tasks.ready.serverError",
+              cond: "isServerError",
             },
           ],
         },
       },
+      error: {},
       allSynced: {
         after: {
           "1000": {
@@ -71,25 +68,53 @@ export const tasksMachine = createMachine(
       afterSyncing: {
         always: [
           {
-            target: "allSynced",
-            cond: "offlineQueueIsEmpty",
+            target: "#tasks.ready.someFailedToSync",
+            cond: "offlineQueueContainsFailedChanges",
           },
           {
-            target: "#tasks.ready.someFailedToSync",
+            target: "allSynced",
           },
         ],
       },
       ready: {
+        description:
+          "The ready-to-sync state. The machine will try to immediately sync every new change in this state",
         initial: "normal",
         states: {
-          normal: {},
+          normal: {
+            always: {
+              target: "#tasks.beforeSyncing",
+              cond: "offlineQueueIsNotEmpty",
+            },
+          },
           someFailedToSync: {
+            entry: "setSyncError",
             on: {
               DISCARD_FAILED_CHANGES: {
                 target: "normal",
+                actions: "discardFailedOfflineChanges",
               },
             },
           },
+          hist: {
+            history: "shallow",
+            type: "history",
+          },
+          networkError: {
+            after: {
+              "1s": {
+                target: "#tasks.ready.networkError",
+                actions: ["retrySync"],
+                internal: true,
+              },
+            },
+            on: {
+              RETRY_SYNC: {
+                target: "#tasks.beforeSyncing",
+              },
+            },
+          },
+          serverError: {},
         },
         on: {
           CHANGE: {
@@ -158,12 +183,17 @@ export const tasksMachine = createMachine(
           }, [] as TaskChange[])
         );
       },
-      TODO: log("TODO"),
+      retrySync: raise({ type: "RETRY_SYNC" }),
+      // discardFailedOfflineChanges: assign({}),
+      // setSyncError: assign({}),
     },
     guards: {
       isOnline: () => navigator.onLine,
       offlineQueueIsEmpty,
       offlineQueueIsNotEmpty: () => !offlineQueueIsEmpty(),
+      // offlineQueueContainsFailedChanges: () => true,
+      // isNetworkError: () => true,
+      // isServerError: () => true,
     },
     services: {
       syncOfflineQueue: (context, event) => {

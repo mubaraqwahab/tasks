@@ -2,7 +2,12 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import { CompleteTaskEvent, DeleteTaskEvent, PageProps } from "@/types";
+import {
+  CompleteTaskEvent,
+  DeleteTaskEvent,
+  PageProps,
+  TaskChange,
+} from "@/types";
 import { Task } from "@/types";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
@@ -26,6 +31,17 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     ["created_at"],
     ["desc"]
   );
+
+  // function sendChange(args: Omit<TaskChange, 'id'|'timestamp'>) {
+  //   send({
+  //     type: 'CHANGE',
+  //     data: {
+  //       id: nanoid(),
+  //       timestamp: new Date().toISOString(),
+  //       ...args
+  //     }
+  //   })
+  // }
 
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
