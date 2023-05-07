@@ -34,6 +34,7 @@ type TaskChangeWrapper<T> = T & {
   id: string;
   taskId: string;
   timestamp: string;
+  lastErrors?: Record<string, string[]>;
 };
 
 interface TaskLiEvent {

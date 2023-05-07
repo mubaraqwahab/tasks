@@ -1,238 +1,232 @@
 import { createMachine, assign, raise } from "xstate";
 import { log } from "xstate/lib/actions";
 import { Task, TaskChange } from "@/types";
+import axios, { AxiosError } from "axios";
+
+type SyncError = {
+  errors: Record<string, string[]>;
+};
+
+type SyncResponse = {
+  syncStatus: Record<string, "ok" | SyncError>;
+};
 
 // Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
 export const tasksMachine = createMachine(
   {
-    id: "tasks",
-    initial: "initializing",
+    id: "taskManager",
+    initial: "normal",
     states: {
-      initializing: {
-        always: [
-          {
-            target: "ready",
-            cond: "offlineQueueIsEmpty",
+      someFailedToSync: {
+        description: "Dialog state",
+        on: {
+          discardFailed: {
+            target: "beforeReloading",
+            actions: "discardFailedChanges",
           },
-          {
-            target: "beforeSyncing",
-            actions: "applyOfflineChanges",
-          },
-        ],
-      },
-      beforeSyncing: {
-        always: [
-          {
-            target: "syncing",
-            cond: "isOnline",
-          },
-          {
-            target: "#tasks.ready.hist",
-          },
-        ],
-      },
-      syncing: {
-        invoke: {
-          src: "syncOfflineQueue",
-          onDone: [
-            {
-              target: "afterSyncing",
-              actions: "updateOfflineQueueWithSyncResult",
-            },
-          ],
-          onError: [
-            {
-              target: "#tasks.ready.networkError",
-              cond: "isNetworkError",
-            },
-            {
-              target: "error",
-            },
-            {
-              target: "#tasks.ready.serverError",
-              cond: "isServerError",
-            },
-          ],
         },
       },
-      error: {},
-      allSynced: {
-        after: {
-          "1000": {
-            target: "#tasks.ready",
-            actions: [],
+      beforeReloading: {
+        entry: "reload",
+        type: "final",
+      },
+      corruptedChangelogError: {
+        description: "Dialog state",
+        on: {
+          resetChangelog: {
+            target: "beforeReloading",
+            actions: "resetChangelog",
+          },
+        },
+      },
+      normal: {
+        initial: "idle",
+        states: {
+          idle: {
+            always: {
+              target: "syncing",
+              cond: "changelogIsNotEmpty",
+            },
+          },
+          syncing: {
+            invoke: {
+              src: "syncChangelog",
+              onDone: [
+                {
+                  target: "afterSyncing",
+                },
+              ],
+              onError: [
+                {
+                  target: "temporaryError",
+                  cond: "isNetworkError",
+                },
+                {
+                  target: "#taskManager.normal.temporaryError.serverError",
+                  cond: "isServerError",
+                },
+                {
+                  target: "#taskManager.corruptedChangelogError",
+                },
+              ],
+            },
+          },
+          afterSyncing: {
+            entry: ["updateChangelogWithSyncResult", "resetAutoRetryCount"],
+            always: [
+              {
+                target: "#taskManager.someFailedToSync",
+                cond: "changelogContainsFailedChanges",
+              },
+              {
+                target: "allSynced",
+              },
+            ],
+          },
+          allSynced: {
+            after: {
+              "3000": {
+                target: "#taskManager.normal.idle",
+                actions: [],
+                internal: false,
+              },
+            },
+          },
+          temporaryError: {
+            after: {
+              "10000": {
+                target: "#taskManager.normal.syncing",
+                cond: "maxAutoRetryCountNotReached",
+                actions: ["incrementAutoRetryCount"],
+                internal: false,
+              },
+            },
+            initial: "networkError",
+            states: {
+              networkError: {},
+              serverError: {},
+            },
+            on: {
+              retrySync: {
+                target: "syncing",
+              },
+            },
+          },
+        },
+        on: {
+          change: {
+            target: "normal",
+            actions: ["applyChange", "pushToChangelog"],
             internal: false,
           },
         },
       },
-      afterSyncing: {
-        always: [
-          {
-            target: "#tasks.ready.someFailedToSync",
-            cond: "offlineQueueContainsFailedChanges",
-          },
-          {
-            target: "allSynced",
-          },
-        ],
-      },
-      ready: {
-        description:
-          "The ready-to-sync state. The machine will try to immediately sync every new change in this state",
-        initial: "normal",
-        states: {
-          normal: {
-            always: {
-              target: "#tasks.beforeSyncing",
-              cond: "offlineQueueIsNotEmpty",
-            },
-          },
-          someFailedToSync: {
-            entry: "setSyncError",
-            on: {
-              DISCARD_FAILED_CHANGES: {
-                target: "normal",
-                actions: "discardFailedOfflineChanges",
-              },
-            },
-          },
-          hist: {
-            history: "shallow",
-            type: "history",
-          },
-          networkError: {
-            after: {
-              "1s": {
-                target: "#tasks.ready.networkError",
-                actions: ["retrySync"],
-                internal: true,
-              },
-            },
-            on: {
-              RETRY_SYNC: {
-                target: "#tasks.beforeSyncing",
-              },
-            },
-          },
-          serverError: {},
-        },
-        on: {
-          CHANGE: {
-            target: "beforeSyncing",
-            actions: ["applyChange", "pushToOfflineQueue"],
-          },
-          ONLINE: {
-            target: "syncing",
-            cond: "offlineQueueIsNotEmpty",
-          },
-        },
-      },
     },
-    on: {
-      CHANGE: {
-        actions: ["applyChange", "pushToOfflineQueue"],
-      },
+    context: {
+      tasks: [],
+      changelog: [],
+      autoRetryCount: 0,
     },
     schema: {
       events: {} as
-        | { type: "CHANGE"; data: TaskChange }
-        | { type: "RETRY_SYNC" }
-        | { type: "ONLINE" }
-        | { type: "DISCARD_FAILED_CHANGES" },
+        | { type: "change"; data: TaskChange }
+        | { type: "discardFailed" }
+        | { type: "retrySync" }
+        | { type: "resetChangelog" },
+      context: {} as {
+        tasks: Task[];
+        changelog: TaskChange[];
+        autoRetryCount: number;
+      },
       services: {} as {
-        syncOfflineQueue: {
-          data: {
-            status: Record<string, "ok" | "error">;
-          };
+        syncChangelog: {
+          data: SyncResponse;
         };
       },
     },
+    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     predictableActionArguments: true,
     preserveActionOrder: true,
-    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
-    context: {} as { tasks: Task[] },
   },
   {
     actions: {
       applyChange: assign({
-        tasks: (context, event) => {
-          const change = event.data;
-          return applyChange(context.tasks, change);
+        tasks(context, event) {
+          return applyChange(context.tasks, event.data);
         },
       }),
-      applyOfflineChanges: assign({
-        tasks: (context) => {
-          const queue = getOfflineQueue();
-          const updatedTasks = queue.reduce(applyChange, context.tasks);
-          return updatedTasks;
+      pushToChangelog: assign({
+        changelog(context, event) {
+          return context.changelog.concat(event.data);
         },
       }),
-      pushToOfflineQueue: (context, event) => {
-        setOfflineQueue((queue) => [...queue, event.data]);
+      updateChangelogWithSyncResult: assign({
+        changelog(context, event) {
+          const { syncStatus } = event.data;
+          return context.changelog
+            .filter((change) => syncStatus[change.id] !== "ok")
+            .map((change) => ({
+              ...change,
+              lastErrors: (syncStatus[change.id] as SyncError).errors,
+            }));
+        },
+      }),
+      discardFailedChanges: assign({
+        changelog(context) {
+          return context.changelog.filter((change) => "lastErrors" in change);
+        },
+      }),
+      reload: () => {
+        window.location.reload();
       },
-      updateOfflineQueueWithSyncResult: (context, event) => {
-        setOfflineQueue((queue) =>
-          queue.reduce((queue, change) => {
-            const status = event.data.status[change.id];
-            if (status === "ok") {
-              return queue;
-            } else {
-              const updatedChange = { ...change, error: status };
-              return [...queue, updatedChange];
-            }
-          }, [] as TaskChange[])
-        );
-      },
-      retrySync: raise({ type: "RETRY_SYNC" }),
-      // discardFailedOfflineChanges: assign({}),
-      // setSyncError: assign({}),
+      resetChangelog: assign({ changelog: [] }),
+      resetAutoRetryCount: assign({ autoRetryCount: 0 }),
+      incrementAutoRetryCount: assign({
+        autoRetryCount(context) {
+          return context.autoRetryCount + 1;
+        },
+      }),
     },
     guards: {
-      isOnline: () => navigator.onLine,
-      offlineQueueIsEmpty,
-      offlineQueueIsNotEmpty: () => !offlineQueueIsEmpty(),
-      // offlineQueueContainsFailedChanges: () => true,
-      // isNetworkError: () => true,
-      // isServerError: () => true,
+      changelogIsNotEmpty: (context) => !!context.changelog.length,
+      changelogContainsFailedChanges: (context) =>
+        context.changelog.some((change) => "lastErrors" in change),
+      isNetworkError: (_, event) =>
+        (event.data as AxiosError).code === "ERR_NETWORK",
+      isServerError: (_, event) => (
+        console.log(event),
+        (event.data as AxiosError).code === "ERR_BAD_RESPONSE"
+      ),
+      maxAutoRetryCountNotReached: (context) => context.autoRetryCount < 2,
     },
     services: {
-      syncOfflineQueue: (context, event) => {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            const random = Math.round(Math.random() * 10);
-            if (random % 2) {
-              const queue = getOfflineQueue();
-              resolve({
-                status: Object.fromEntries<"ok" | "error">(
-                  queue.map((c, i) => [c.id, "ok"])
-                ),
-              });
-            } else {
-              reject(new TypeError("Network wahala"));
-            }
-          }, 2000);
-        });
+      async syncChangelog(context) {
+        const response = await axios.post<SyncResponse>(
+          "/api/sync",
+          context.changelog.map((change) => ({ ...change, type: "hi" }))
+        );
+        return response.data;
       },
     },
   }
 );
 
-function getOfflineQueue(): TaskChange[] {
-  const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
-  return JSON.parse(queueAsJSON) as TaskChange[];
-}
+// function getOfflineQueue(): TaskChange[] {
+//   const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
+//   return JSON.parse(queueAsJSON) as TaskChange[];
+// }
 
-function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
-  const queue = getOfflineQueue();
-  const updatedQueue = updaterFn(queue);
-  const updatedQueueAsJSON = JSON.stringify(updatedQueue);
-  localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
-}
+// function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
+//   const queue = getOfflineQueue();
+//   const updatedQueue = updaterFn(queue);
+//   const updatedQueueAsJSON = JSON.stringify(updatedQueue);
+//   localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
+// }
 
-function offlineQueueIsEmpty() {
-  const queue = getOfflineQueue();
-  return queue.length === 0;
-}
+// function offlineQueueIsEmpty() {
+//   const queue = getOfflineQueue();
+//   return queue.length === 0;
+// }
 
 function applyChange(tasks: Task[], change: TaskChange): Task[] {
   if (change.type === "create") {
@@ -259,9 +253,9 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
   }
 }
 
-if (import.meta.env.DEV) {
-  // @ts-ignore
-  window.getq = getOfflineQueue;
-  // @ts-ignore
-  window.setq = setOfflineQueue;
-}
+// if (import.meta.env.DEV) {
+//   // @ts-ignore
+//   window.getq = getOfflineQueue;
+//   // @ts-ignore
+//   window.setq = setOfflineQueue;
+// }
