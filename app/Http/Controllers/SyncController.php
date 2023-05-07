@@ -12,11 +12,18 @@ class SyncController extends Controller
 {
     public function sync(Request $request)
     {
+        // TODO: validate that $changes is an array. Laravel kind of guarantees this,
+        // but what if this controller method received something other than an array?
         $changes = $request->all();
         $syncStatus = [];
 
         // TODO: consider using snake case for the change keys
         // if you save the changes in the database.
+
+        // TODO: consider applying all the changes in a single
+        // transaction so you don't have to worry about partial
+        // syncs (and thus don't have to worry about saving changes
+        // in the database)
 
         foreach ($changes as $change) {
             try {
