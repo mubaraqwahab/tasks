@@ -13,7 +13,6 @@ import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
 import { useOnline, p } from "@/utils";
 import { For } from "@/Components/For";
-import { nanoid } from "nanoid";
 import { useEffect } from "react";
 
 type TaskPageProps = PageProps<{
@@ -21,8 +20,11 @@ type TaskPageProps = PageProps<{
 }>;
 
 function getOfflineChangelog(): TaskChange[] {
-  const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
-  return JSON.parse(queueAsJSON) as TaskChange[];
+  const changelogAsJSON = localStorage.getItem("taskChangelog") || "[]";
+  // Note: if the persisted changelog isn't an array of task changes,
+  // or not an array at all, then someone must have tampered with it.
+  // Don't defend against such a situation on the client side.
+  return JSON.parse(changelogAsJSON) as TaskChange[];
 }
 
 function useTasksMachine(tasks: Task[]) {
@@ -35,13 +37,18 @@ function useTasksMachine(tasks: Task[]) {
     JSON.stringify(state.context.changelog)
   );
 
+  console.log(getOfflineChangelog());
+  console.log(state.toStrings().join(", "));
+
   useEffect(() => {
     const handleOnline = () => send({ type: "online" });
     window.addEventListener("online", handleOnline);
-    return () => handleOnline;
+    return () => window.removeEventListener("online", handleOnline);
   });
 
-  return [state, send, ...rest];
+  return [state, send, ...rest] as ReturnType<
+    typeof useMachine<typeof tasksMachine>
+  >;
 }
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
@@ -100,7 +107,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     errors = state.context.changelog.filter((change) => "lastErrors" in change);
   } else if (state.matches("normal.temporaryError.networkError")) {
   } else if (state.matches("normal.temporaryError.serverError")) {
-  } else if (state.matches("corruptedChangelogError")) {
+  } else if (state.matches("normal.temporaryError.unknownError")) {
   }
 
   return (
@@ -150,7 +157,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         {/* placeholder=" " is required above for :placeholder-shown to work */}
         <label
           htmlFor="taskName"
-          className="absolute inset-x-3 top-1/2 -translate-y-1/2"
+          className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none"
         >
           Add a new task
         </label>

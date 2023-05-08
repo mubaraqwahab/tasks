@@ -21,7 +21,6 @@
     "axios": "^1.1.2",
     "laravel-vite-plugin": "^0.7.2",
     "lodash.orderby": "^4.6.0",
-    "nanoid": "^4.0.2",
     "postcss": "^8.4.18",
     "prettier": "2.8.8",
     "react": "^18.2.0",

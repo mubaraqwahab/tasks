@@ -15,27 +15,14 @@ type SyncResponse = {
 export const tasksMachine = createMachine(
   {
     id: "taskManager",
-    initial: "normal",
+    initial: "initializing",
     states: {
       someFailedToSync: {
-        description: "Dialog state",
+        description: "Modal state",
         on: {
           discardFailed: {
-            target: "beforeReloading",
+            target: "reloading",
             actions: "discardFailedChanges",
-          },
-        },
-      },
-      beforeReloading: {
-        entry: "reload",
-        type: "final",
-      },
-      corruptedChangelogError: {
-        description: "Dialog state",
-        on: {
-          resetChangelog: {
-            target: "beforeReloading",
-            actions: "resetChangelog",
           },
         },
       },
@@ -66,7 +53,7 @@ export const tasksMachine = createMachine(
                   cond: "isServerError",
                 },
                 {
-                  target: "#taskManager.corruptedChangelogError",
+                  target: "#taskManager.normal.temporaryError.unknownError",
                 },
               ],
             },
@@ -105,9 +92,16 @@ export const tasksMachine = createMachine(
             states: {
               networkError: {},
               serverError: {},
+              unknownError: {
+                entry: "setError",
+                exit: "resetError",
+              },
             },
             on: {
               retrySync: {
+                target: "syncing",
+              },
+              online: {
                 target: "syncing",
               },
             },
@@ -121,28 +115,42 @@ export const tasksMachine = createMachine(
           },
         },
       },
-    },
-    context: {
-      tasks: [],
-      changelog: [],
-      autoRetryCount: 0,
+      initializing: {
+        description:
+          "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
+        entry: "applyOfflineChanges",
+        always: {
+          target: "normal",
+        },
+      },
+      reloading: {
+        entry: "reload",
+        type: "final",
+      },
     },
     schema: {
-      events: {} as
-        | { type: "change"; data: TaskChange }
-        | { type: "discardFailed" }
-        | { type: "retrySync" }
-        | { type: "resetChangelog" },
       context: {} as {
         tasks: Task[];
         changelog: TaskChange[];
         autoRetryCount: number;
+        error: unknown;
       },
+      events: {} as
+        | { type: "change"; data: TaskChange }
+        | { type: "discardFailed" }
+        | { type: "retrySync" }
+        | { type: "online" },
       services: {} as {
         syncChangelog: {
           data: SyncResponse;
         };
       },
+    },
+    context: {
+      tasks: [],
+      changelog: [],
+      autoRetryCount: 0,
+      error: null,
     },
     tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     predictableActionArguments: true,
@@ -150,6 +158,11 @@ export const tasksMachine = createMachine(
   },
   {
     actions: {
+      applyOfflineChanges: assign({
+        tasks(context) {
+          return context.changelog.reduce(applyChange, context.tasks);
+        },
+      }),
       applyChange: assign({
         tasks(context, event) {
           return applyChange(context.tasks, event.data);
@@ -173,19 +186,26 @@ export const tasksMachine = createMachine(
       }),
       discardFailedChanges: assign({
         changelog(context) {
-          return context.changelog.filter((change) => "lastErrors" in change);
+          return context.changelog.filter(
+            (change) => !("lastErrors" in change)
+          );
         },
       }),
       reload: () => {
         window.location.reload();
       },
-      resetChangelog: assign({ changelog: [] }),
       resetAutoRetryCount: assign({ autoRetryCount: 0 }),
       incrementAutoRetryCount: assign({
         autoRetryCount(context) {
           return context.autoRetryCount + 1;
         },
       }),
+      setError: assign({
+        error(_, event) {
+          return event.data;
+        },
+      }),
+      resetError: assign({ error: null }),
     },
     guards: {
       changelogIsNotEmpty: (context) => !!context.changelog.length,

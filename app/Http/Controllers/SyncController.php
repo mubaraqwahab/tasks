@@ -18,17 +18,20 @@ class SyncController extends Controller
         $syncStatus = [];
 
         // TODO: consider using snake case for the change keys
-        // if you save the changes in the database.
-
-        // TODO: consider applying all the changes in a single
-        // transaction so you don't have to worry about partial
-        // syncs (and thus don't have to worry about saving changes
-        // in the database)
 
         foreach ($changes as $change) {
             try {
-                $validated = $this->validateChange($change);
-                $this->applyChange($validated, $request);
+                $change = $this->validateChange($change);
+
+                // TODO:
+                // if change ID already exists in DB:
+                //      set sync status to duplicate or something
+                // else,
+                //      begin transaction:
+                //          apply change to tasks
+                //          save change to DB
+                //      set sync status to okay
+                $this->applyChange($change, $request);
 
                 $syncStatus[$change["id"]] = "ok";
             } catch (ValidationException $e) {
@@ -40,6 +43,7 @@ class SyncController extends Controller
                     ],
                 ];
             }
+            // Any other error should trigger a 500
         }
 
         return ["syncStatus" => $syncStatus];
