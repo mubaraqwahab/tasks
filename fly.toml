@@ -16,6 +16,7 @@ processes = []
   LOG_LEVEL = "info"
   LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
   DB_CONNECTION="pgsql"
+  SANCTUM_STATEFUL_DOMAINS="mubaraqwahab-tasks.fly.dev"
 
 [experimental]
   auto_rollback = true
