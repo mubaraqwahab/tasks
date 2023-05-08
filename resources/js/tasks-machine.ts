@@ -203,7 +203,7 @@ export const tasksMachine = createMachine(
       async syncChangelog(context) {
         const response = await axios.post<SyncResponse>(
           "/api/sync",
-          context.changelog.map((change) => ({ ...change, type: "hi" }))
+          context.changelog //.map((change) => ({ ...change, type: "hi" }))
         );
         return response.data;
       },
