@@ -61,9 +61,9 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "change",
       data: {
-        id: nanoid(),
+        id: crypto.randomUUID(),
         type: "create",
-        taskId: nanoid(),
+        taskId: crypto.randomUUID(),
         taskName: formData.get("name") as string,
         timestamp: new Date().toISOString(),
       },
@@ -75,7 +75,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "change",
       data: {
-        id: nanoid(),
+        id: crypto.randomUUID(),
         type: "complete",
         taskId: e.taskId,
         timestamp: new Date().toISOString(),
@@ -87,7 +87,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "change",
       data: {
-        id: nanoid(),
+        id: crypto.randomUUID(),
         type: "delete",
         taskId: e.taskId,
         timestamp: new Date().toISOString(),
