@@ -3,12 +3,12 @@ import { log } from "xstate/lib/actions";
 import { Task, TaskChange } from "@/types";
 import axios, { AxiosError } from "axios";
 
-type SyncError = {
+type SyncErrorStatus = {
   errors: Record<string, string[]>;
 };
 
-type SyncResponse = {
-  syncStatus: Record<string, "ok" | SyncError>;
+type SyncResponseData = {
+  syncStatus: Record<string, "ok" | SyncErrorStatus>;
 };
 
 // Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
@@ -142,7 +142,7 @@ export const tasksMachine = createMachine(
         | { type: "online" },
       services: {} as {
         syncChangelog: {
-          data: SyncResponse;
+          data: SyncResponseData;
         };
       },
     },
@@ -180,7 +180,7 @@ export const tasksMachine = createMachine(
             .filter((change) => syncStatus[change.id] !== "ok")
             .map((change) => ({
               ...change,
-              lastErrors: (syncStatus[change.id] as SyncError).errors,
+              lastErrors: (syncStatus[change.id] as SyncErrorStatus).errors,
             }));
         },
       }),
@@ -221,7 +221,7 @@ export const tasksMachine = createMachine(
     },
     services: {
       async syncChangelog(context) {
-        const response = await axios.post<SyncResponse>(
+        const response = await axios.post<SyncResponseData>(
           "/api/sync",
           context.changelog //.map((change) => ({ ...change, type: "hi" }))
         );
@@ -230,23 +230,6 @@ export const tasksMachine = createMachine(
     },
   }
 );
-
-// function getOfflineQueue(): TaskChange[] {
-//   const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
-//   return JSON.parse(queueAsJSON) as TaskChange[];
-// }
-
-// function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
-//   const queue = getOfflineQueue();
-//   const updatedQueue = updaterFn(queue);
-//   const updatedQueueAsJSON = JSON.stringify(updatedQueue);
-//   localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
-// }
-
-// function offlineQueueIsEmpty() {
-//   const queue = getOfflineQueue();
-//   return queue.length === 0;
-// }
 
 function applyChange(tasks: Task[], change: TaskChange): Task[] {
   if (change.type === "create") {
@@ -272,10 +255,3 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
     throw new Error();
   }
 }
-
-// if (import.meta.env.DEV) {
-//   // @ts-ignore
-//   window.getq = getOfflineQueue;
-//   // @ts-ignore
-//   window.setq = setOfflineQueue;
-// }
