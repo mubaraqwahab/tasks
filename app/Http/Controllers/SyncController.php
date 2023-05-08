@@ -36,7 +36,7 @@ class SyncController extends Controller
             } catch (ModelNotFoundException $e) {
                 $syncStatus[$change["id"]] = [
                     "errors" => [
-                        "taskId" => "No task exists with the given task id",
+                        "taskId" => ["No task exists with the given task id"],
                     ],
                 ];
             }

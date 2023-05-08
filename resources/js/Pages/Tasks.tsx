@@ -14,15 +14,38 @@ import { useMachine } from "@xstate/react";
 import { useOnline, p } from "@/utils";
 import { For } from "@/Components/For";
 import { nanoid } from "nanoid";
+import { useEffect } from "react";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
 
-let num = 1;
+function getOfflineChangelog(): TaskChange[] {
+  const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
+  return JSON.parse(queueAsJSON) as TaskChange[];
+}
+
+function useTasksMachine(tasks: Task[]) {
+  const [state, send, ...rest] = useMachine(tasksMachine, {
+    context: { tasks, changelog: getOfflineChangelog() },
+  });
+
+  localStorage.setItem(
+    "taskChangelog",
+    JSON.stringify(state.context.changelog)
+  );
+
+  useEffect(() => {
+    const handleOnline = () => send({ type: "online" });
+    window.addEventListener("online", handleOnline);
+    return () => handleOnline;
+  });
+
+  return [state, send, ...rest];
+}
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
-  const [state, send] = useMachine(tasksMachine, { context: { tasks } });
+  const [state, send] = useTasksMachine(tasks);
   const isOnline = useOnline();
 
   // TODO: replace orderby with custom impl.
@@ -32,22 +55,11 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     ["desc"]
   );
 
-  // function sendChange(args: Omit<TaskChange, 'id'|'timestamp'>) {
-  //   send({
-  //     type: 'CHANGE',
-  //     data: {
-  //       id: nanoid(),
-  //       timestamp: new Date().toISOString(),
-  //       ...args
-  //     }
-  //   })
-  // }
-
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     send({
-      type: "CHANGE",
+      type: "change",
       data: {
         id: nanoid(),
         type: "create",
@@ -61,7 +73,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
   const handleCompleteTask = (e: CompleteTaskEvent) => {
     send({
-      type: "CHANGE",
+      type: "change",
       data: {
         id: nanoid(),
         type: "complete",
@@ -73,7 +85,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
   const handleDeleteTask = (e: DeleteTaskEvent) => {
     send({
-      type: "CHANGE",
+      type: "change",
       data: {
         id: nanoid(),
         type: "delete",
@@ -83,16 +95,40 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     });
   };
 
+  let errors;
+  if (state.matches("someFailedToSync")) {
+    errors = state.context.changelog.filter((change) => "lastErrors" in change);
+  } else if (state.matches("normal.temporaryError.networkError")) {
+  } else if (state.matches("normal.temporaryError.serverError")) {
+  } else if (state.matches("corruptedChangelogError")) {
+  }
+
   return (
     <Layout auth={auth} title="Upcoming tasks">
       <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
 
       {/* Status bar */}
-      <p className="mb-3 flex gap-x-1.5">
-        Status:
-        <span>{isOnline ? "online" : "offline"}</span> &middot;
-        <span>{state.toStrings().join(", ")}</span>
-      </p>
+      <div className="mb-5">
+        <p className="flex gap-x-1.5 mb-1.5">
+          Status:
+          <span>{isOnline ? "online" : "offline"}</span> &middot;
+          <span>{state.toStrings().join(", ")}</span>
+        </p>
+        {errors && (
+          <details>
+            <summary>Errors:</summary>
+            <pre className="max-h-40 overflow-y-scroll mt-1 border p-2">
+              <code>{JSON.stringify(errors, null, 2)}</code>
+            </pre>
+            <button
+              className="border p-1 bg-gray-100"
+              onClick={() => send({ type: "discardFailed" })}
+            >
+              Discard failed changes
+            </button>
+          </details>
+        )}
+      </div>
 
       {/* <div className="mb-3">Errors? { JSON.stringify($page.props.errors) }</div> */}
 
