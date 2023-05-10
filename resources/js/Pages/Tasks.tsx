@@ -7,8 +7,8 @@ import {
   DeleteTaskEvent,
   PageProps,
   TaskChange,
-} from "@/types";
-import { Task } from "@/types";
+} from "@/types/models";
+import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
 import { useOnline, p } from "@/utils";

@@ -1,6 +1,5 @@
-import { createMachine, assign, raise } from "xstate";
-import { log } from "xstate/lib/actions";
-import { Task, TaskChange } from "@/types";
+import { createMachine, assign } from "xstate";
+import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
 
 type SyncError = {

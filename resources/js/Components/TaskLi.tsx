@@ -1,4 +1,4 @@
-import { CompleteTaskEvent, DeleteTaskEvent, Task } from "@/types";
+import { CompleteTaskEvent, DeleteTaskEvent, Task } from "@/types/models";
 import Form from "@/Components/Form";
 import { p } from "@/utils";
 
