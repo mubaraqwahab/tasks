@@ -1,5 +1,5 @@
 import { AuthContext } from "@/context";
-import { PageProps } from "@/types";
+import { PageProps } from "@/types/models";
 import { Head } from "@inertiajs/react";
 import { PropsWithChildren } from "react";
 
