@@ -5,11 +5,11 @@ interface TaskLiEvent {
   taskId: string;
 }
 
-export interface CompleteTaskEvent extends TaskLiEvent {
+export interface CompleteTaskLiEvent extends TaskLiEvent {
   type: "complete";
 }
 
-export interface DeleteTaskEvent extends TaskLiEvent {
+export interface DeleteTaskLiEvent extends TaskLiEvent {
   type: "delete";
 }
 

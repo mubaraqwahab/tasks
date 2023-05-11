@@ -4,6 +4,7 @@
 interface Model {
   id: number | string;
   created_at: string | null;
+  // I'm not using this on the client side for now.
   // updated_at: string | null
 }
 

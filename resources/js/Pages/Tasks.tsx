@@ -2,18 +2,15 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import {
-  CompleteTaskEvent,
-  DeleteTaskEvent,
-  PageProps,
-  TaskChange,
-} from "@/types/models";
+import { CompleteTaskLiEvent, DeleteTaskLiEvent, PageProps } from "@/types";
+import { TaskChange } from "@/types/models";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
 import { useOnline, p } from "@/utils";
 import { For } from "@/Components/For";
 import { useEffect } from "react";
+import { EventFrom } from "xstate";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -65,6 +62,8 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
+    // send({type: 'change', changeType: 'create', taskName: formData.get('name') })
+    // send({type: 'change.create', taskName: formData.get('name') })
     send({
       type: "change",
       data: {
@@ -78,7 +77,9 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     form.reset();
   });
 
-  const handleCompleteTask = (e: CompleteTaskEvent) => {
+  const handleCompleteTask = (e: CompleteTaskLiEvent) => {
+    // send({type: 'change', changeType: 'complete', taskId: e.taskId})
+    // send({type: 'change.complete', taskId: e.taskId})
     send({
       type: "change",
       data: {
@@ -90,7 +91,9 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     });
   };
 
-  const handleDeleteTask = (e: DeleteTaskEvent) => {
+  const handleDeleteTask = (e: DeleteTaskLiEvent) => {
+    // send({type: 'change', changeType: 'delete', taskId: e.taskId})
+    // send({type: 'change.delete', taskId: e.taskId})
     send({
       type: "change",
       data: {
