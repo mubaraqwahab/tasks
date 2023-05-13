@@ -2,18 +2,15 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import {
-  CompleteTaskEvent,
-  DeleteTaskEvent,
-  PageProps,
-  TaskChange,
-} from "@/types/models";
+import { CompleteTaskLiEvent, DeleteTaskLiEvent, PageProps } from "@/types";
+import { TaskChange } from "@/types/models";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
 import { useOnline, p } from "@/utils";
 import { For } from "@/Components/For";
 import { useEffect } from "react";
+import { EventFrom } from "xstate";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -67,44 +64,23 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     const formData = new FormData(form);
     send({
       type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "create",
-        taskId: crypto.randomUUID(),
-        taskName: formData.get("name") as string,
-        timestamp: new Date().toISOString(),
-      },
+      changeType: "create",
+      taskName: formData.get("name") as string,
     });
     form.reset();
   });
 
-  const handleCompleteTask = (e: CompleteTaskEvent) => {
-    send({
-      type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "complete",
-        taskId: e.taskId,
-        timestamp: new Date().toISOString(),
-      },
-    });
+  const handleCompleteTask = (e: CompleteTaskLiEvent) => {
+    send({ type: "change", changeType: "complete", taskId: e.taskId });
   };
 
-  const handleDeleteTask = (e: DeleteTaskEvent) => {
-    send({
-      type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "delete",
-        taskId: e.taskId,
-        timestamp: new Date().toISOString(),
-      },
-    });
+  const handleDeleteTask = (e: DeleteTaskLiEvent) => {
+    send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
   let errors;
   if (state.matches("someFailedToSync")) {
-    errors = state.context.changelog.filter((change) => "lastErrors" in change);
+    errors = state.context.changelog.filter((change) => !!change.lastError);
   } else if (state.matches("normal.temporaryError.networkError")) {
   } else if (state.matches("normal.temporaryError.serverError")) {
   } else if (state.matches("normal.temporaryError.unknownError")) {

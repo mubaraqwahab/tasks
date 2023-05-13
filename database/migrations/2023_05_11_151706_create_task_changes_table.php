@@ -10,14 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create("tasks_changes", function (Blueprint $table) {
+        // I need this table just to prevent duplicate task changes
+        Schema::create("task_changes", function (Blueprint $table) {
             $table->uuid("id")->primary();
+            // Just for debugging.
             $table->enum("type", ["create", "complete", "delete"]);
-            $table
-                ->foreignUuid("task_id")
-                ->constrained()
-                ->nullOnDelete();
-            $table->json("args")->default("{}");
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists("tasks_changes");
+        Schema::dropIfExists("task_changes");
     }
 };
