@@ -62,52 +62,25 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    // send({type: 'change', changeType: 'create', taskName: formData.get('name') })
-    // send({type: 'change.create', taskName: formData.get('name') })
     send({
       type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "create",
-        taskId: crypto.randomUUID(),
-        taskName: formData.get("name") as string,
-        timestamp: new Date().toISOString(),
-      },
+      changeType: "create",
+      taskName: formData.get("name") as string,
     });
     form.reset();
   });
 
   const handleCompleteTask = (e: CompleteTaskLiEvent) => {
-    // send({type: 'change', changeType: 'complete', taskId: e.taskId})
-    // send({type: 'change.complete', taskId: e.taskId})
-    send({
-      type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "complete",
-        taskId: e.taskId,
-        timestamp: new Date().toISOString(),
-      },
-    });
+    send({ type: "change", changeType: "complete", taskId: e.taskId });
   };
 
   const handleDeleteTask = (e: DeleteTaskLiEvent) => {
-    // send({type: 'change', changeType: 'delete', taskId: e.taskId})
-    // send({type: 'change.delete', taskId: e.taskId})
-    send({
-      type: "change",
-      data: {
-        id: crypto.randomUUID(),
-        type: "delete",
-        taskId: e.taskId,
-        timestamp: new Date().toISOString(),
-      },
-    });
+    send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
   let errors;
   if (state.matches("someFailedToSync")) {
-    errors = state.context.changelog.filter((change) => "lastErrors" in change);
+    errors = state.context.changelog.filter((change) => !!change.lastError);
   } else if (state.matches("normal.temporaryError.networkError")) {
   } else if (state.matches("normal.temporaryError.serverError")) {
   } else if (state.matches("normal.temporaryError.unknownError")) {

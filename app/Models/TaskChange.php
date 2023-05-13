@@ -11,7 +11,7 @@ class TaskChange extends Model
 {
     use HasFactory, HasUuids;
 
-    // protected $fillable = ["type", "args", "created_at"];
+    protected $fillable = ["id", "type", "created_at"];
 
     public function task(): BelongsTo
     {

@@ -3,11 +3,12 @@ import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
 
 type SyncError = {
-  errors: Record<string, string[]>;
+  type: "error";
+  error: string;
 };
 
 type SyncResponse = {
-  syncStatus: Record<string, "ok" | SyncError>;
+  syncStatus: Record<string, { type: "ok" | "duplicate" } | SyncError>;
 };
 
 // Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
@@ -109,7 +110,7 @@ export const tasksMachine = createMachine(
         on: {
           change: {
             target: "normal",
-            actions: ["applyChange", "pushToChangelog"],
+            actions: ["pushToChangelog", "applyLastChange"],
             internal: false,
           },
         },
@@ -135,7 +136,12 @@ export const tasksMachine = createMachine(
         error: unknown;
       },
       events: {} as
-        | { type: "change"; data: TaskChange }
+        | { type: "change"; changeType: "create"; taskName: string }
+        | {
+            type: "change";
+            changeType: Exclude<TaskChange["type"], "create">;
+            taskId: string;
+          }
         | { type: "discardFailed" }
         | { type: "retrySync" }
         | { type: "online" },
@@ -162,32 +168,44 @@ export const tasksMachine = createMachine(
           return context.changelog.reduce(applyChange, context.tasks);
         },
       }),
-      applyChange: assign({
-        tasks(context, event) {
-          return applyChange(context.tasks, event.data);
+      applyLastChange: assign({
+        tasks(context) {
+          return applyChange(context.tasks, context.changelog.at(-1)!);
         },
       }),
       pushToChangelog: assign({
         changelog(context, event) {
-          return context.changelog.concat(event.data);
+          const change = {
+            id: crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            ...(event.changeType === "create"
+              ? {
+                  type: event.changeType,
+                  task_id: crypto.randomUUID(),
+                  task_name: event.taskName,
+                }
+              : {
+                  type: event.changeType,
+                  task_id: event.taskId,
+                }),
+          };
+          return context.changelog.concat(change);
         },
       }),
       updateChangelogWithSyncResult: assign({
         changelog(context, event) {
           const { syncStatus } = event.data;
           return context.changelog
-            .filter((change) => syncStatus[change.id] !== "ok")
+            .filter((change) => syncStatus[change.id].type === "error")
             .map((change) => ({
               ...change,
-              lastErrors: (syncStatus[change.id] as SyncError).errors,
+              lastError: (syncStatus[change.id] as SyncError).error,
             }));
         },
       }),
       discardFailedChanges: assign({
         changelog(context) {
-          return context.changelog.filter(
-            (change) => !("lastErrors" in change)
-          );
+          return context.changelog.filter((change) => !!change.lastError);
         },
       }),
       reload: () => {
@@ -209,7 +227,7 @@ export const tasksMachine = createMachine(
     guards: {
       changelogIsNotEmpty: (context) => !!context.changelog.length,
       changelogContainsFailedChanges: (context) =>
-        context.changelog.some((change) => "lastErrors" in change),
+        context.changelog.some((change) => !!change.lastError),
       isNetworkError: (_, event) =>
         (event.data as AxiosError).code === "ERR_NETWORK",
       isServerError: (_, event) => (
@@ -222,7 +240,7 @@ export const tasksMachine = createMachine(
       async syncChangelog(context) {
         const response = await axios.post<SyncResponse>(
           "/api/sync",
-          context.changelog //.map((change) => ({ ...change, type: "hi" }))
+          context.changelog
         );
         return response.data;
       },
@@ -230,51 +248,28 @@ export const tasksMachine = createMachine(
   }
 );
 
-// function getOfflineQueue(): TaskChange[] {
-//   const queueAsJSON = localStorage.getItem("taskChangeQueue") || "[]";
-//   return JSON.parse(queueAsJSON) as TaskChange[];
-// }
-
-// function setOfflineQueue(updaterFn: (queue: TaskChange[]) => TaskChange[]) {
-//   const queue = getOfflineQueue();
-//   const updatedQueue = updaterFn(queue);
-//   const updatedQueueAsJSON = JSON.stringify(updatedQueue);
-//   localStorage.setItem("taskChangeQueue", updatedQueueAsJSON);
-// }
-
-// function offlineQueueIsEmpty() {
-//   const queue = getOfflineQueue();
-//   return queue.length === 0;
-// }
-
 function applyChange(tasks: Task[], change: TaskChange): Task[] {
   if (change.type === "create") {
     return [
       ...tasks,
       {
-        id: change.taskId,
-        name: change.taskName,
-        created_at: change.timestamp,
+        id: change.task_id,
+        name: change.task_name,
+        created_at: change.created_at,
         completed_at: null,
         edited_at: null,
       },
     ];
   } else if (change.type === "complete") {
     return tasks.map((task) =>
-      task.id === change.taskId
-        ? { ...task, completed_at: change.timestamp }
+      task.id === change.task_id
+        ? { ...task, completed_at: change.created_at }
         : task
     );
   } else if (change.type === "delete") {
-    return tasks.filter((task) => task.id !== change.taskId);
+    return tasks.filter((task) => task.id !== change.task_id);
   } else {
+    // TODO: is this the best you can do?
     throw new Error();
   }
 }
-
-// if (import.meta.env.DEV) {
-//   // @ts-ignore
-//   window.getq = getOfflineQueue;
-//   // @ts-ignore
-//   window.setq = setOfflineQueue;
-// }

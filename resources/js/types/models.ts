@@ -24,24 +24,11 @@ export interface Task extends Model {
   completed_at: string | null;
 }
 
-export type TaskChange = TaskChangeWrapper<
-  { type: "create"; taskName: string } | { type: "complete" | "delete" }
->;
-
-type TaskChangeWrapper<T> = T & {
-  id: string;
-  taskId: string;
-  timestamp: string;
-  lastErrors?: Record<string, string[]>;
-};
-
-type TaskChange_ = CreateTaskChange | NonCreateTaskChange;
+export type TaskChange = CreateTaskChange | NonCreateTaskChange;
 
 interface CreateTaskChange extends BaseTaskChange {
   type: "create";
-  args: {
-    name: string;
-  };
+  task_name: string;
 }
 
 interface NonCreateTaskChange extends BaseTaskChange {
@@ -51,9 +38,6 @@ interface NonCreateTaskChange extends BaseTaskChange {
 interface BaseTaskChange extends Model {
   id: string;
   type: string;
-  task_id: Task["id"] | null;
-  // task: Task;
-  args: Record<string, unknown>;
-  // NOTE: lastErrors doesn't come from the backend
-  lastErrors?: Record<string, string[]>;
+  task_id: Task["id"];
+  lastError?: string;
 }

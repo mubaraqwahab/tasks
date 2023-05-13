@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\TaskChange;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -12,38 +15,33 @@ class SyncController extends Controller
 {
     public function sync(Request $request)
     {
-        // TODO: validate that $changes is an array. Laravel kind of guarantees this,
-        // but what if this controller method received something other than an array?
         $changes = $request->all();
         $syncStatus = [];
 
-        // TODO: consider using snake case for the change keys
-
+        // TODO: validate that each $change is an array.
         foreach ($changes as $change) {
             try {
                 $change = $this->validateChange($change);
 
-                // TODO:
-                // if change ID already exists in DB:
-                //      set sync status to duplicate or something
-                // else,
-                //      begin transaction:
-                //          apply change to tasks
-                //          save change to DB
-                //      set sync status to okay
-                $this->applyChange($change, $request);
-
-                $syncStatus[$change["id"]] = "ok";
+                if (TaskChange::find($change["id"])) {
+                    $syncStatus[$change["id"]] = ["type" => "duplicate"];
+                } else {
+                    $this->applyChange($change, $request);
+                    $syncStatus[$change["id"]] = ["type" => "ok"];
+                }
             } catch (ValidationException $e) {
-                $syncStatus[$change["id"]] = ["errors" => $e->errors()];
+                $syncStatus[$change["id"]] = [
+                    "type" => "error",
+                    // Just the first error
+                    "error" => Arr::flatten($e->errors())[0],
+                ];
             } catch (ModelNotFoundException $e) {
                 $syncStatus[$change["id"]] = [
-                    "errors" => [
-                        "taskId" => ["No task exists with the given task id"],
-                    ],
+                    "type" => "error",
+                    "error" => "No task exists with the given task id",
                 ];
             }
-            // Any other error should trigger a 500
+            // Any other error will trigger a 500
         }
 
         return ["syncStatus" => $syncStatus];
@@ -54,50 +52,57 @@ class SyncController extends Controller
         $validator = Validator::make(
             data: $change,
             rules: [
-                "id" => "required",
-                "timestamp" => "date|required",
-                "taskId" => "required",
+                "id" => "required|uuid",
                 "type" => ["required", "in:create,complete,uncomplete,delete"],
-                "taskName" => "required_if:type,create",
+                "task_id" => "required|uuid",
+                "task_name" => "required_if:type,create",
+                "created_at" => "required|date",
             ],
             attributes: [
                 "type" => "change type",
             ],
-        );
+        )->stopOnFirstFailure();
 
         return $validator->validate();
     }
 
+    /**
+     * @throws ModelNotFoundException
+     */
     protected function applyChange(array $change, Request $request)
     {
-        $taskId = $change["taskId"];
+        DB::transaction(function () use ($change, $request) {
+            TaskChange::create($change);
 
-        switch ($change["type"]) {
-            case "create":
-                $task = new Task();
-                $task->id = $taskId;
-                $task->name = $change["taskName"];
-                $task->created_at = $change["timestamp"];
-                $task->user_id = $request->user()->id;
-                $task->save();
-                break;
+            $taskId = $change["task_id"];
 
-            case "complete":
-                $task = Task::findOrFail($taskId);
-                $task->completed_at = $change["timestamp"];
-                $task->save();
-                break;
+            switch ($change["type"]) {
+                case "create":
+                    $task = new Task();
+                    $task->id = $taskId;
+                    $task->name = $change["task_name"];
+                    $task->created_at = $change["created_at"];
+                    $task->user_id = $request->user()->id;
+                    $task->save();
+                    break;
 
-            case "uncomplete":
-                $task = Task::findOrFail($taskId);
-                $task->completed_at = null;
-                $task->save();
-                break;
+                case "complete":
+                    $task = Task::findOrFail($taskId);
+                    $task->completed_at = $change["created_at"];
+                    $task->save();
+                    break;
 
-            case "delete":
-                $task = Task::findOrFail($taskId);
-                $task->delete();
-                break;
-        }
+                case "uncomplete":
+                    $task = Task::findOrFail($taskId);
+                    $task->completed_at = null;
+                    $task->save();
+                    break;
+
+                case "delete":
+                    $task = Task::findOrFail($taskId);
+                    $task->delete();
+                    break;
+            }
+        });
     }
 }
