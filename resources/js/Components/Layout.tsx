@@ -2,6 +2,7 @@ import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head } from "@inertiajs/react";
 import { PropsWithChildren } from "react";
+import Form from "@/Components/Form";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
@@ -22,9 +23,9 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                 <a href="/account">Account</a>
               </li>
               <li>
-                <form method="POST" action={route("logout")}>
+                <Form method="POST" action={route("logout")}>
                   <button type="submit">Log out</button>
-                </form>
+                </Form>
               </li>
             </ul>
           </details>
