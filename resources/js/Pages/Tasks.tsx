@@ -124,7 +124,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         <input
           type="text"
           id="taskName"
-          name="name"
+          name="taskName"
           required
           maxLength={255}
           className="block w-full rounded-lg px-3 py-2 [&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"

@@ -17,14 +17,9 @@ class TaskController extends Controller
      */
     public function index(): Response
     {
-        $completedTasksQuery = Task::with("user")
-            ->whereNotNull("completed_at")
-            ->latest("completed_at");
-
         $tasks = Task::with("user")
             ->whereNull("completed_at")
             ->latest()
-            ->union($completedTasksQuery)
             ->get();
 
         return Inertia::render("Tasks", [
@@ -38,11 +33,11 @@ class TaskController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate(
-            ["name" => "required|string|max:255"],
+            ["taskName" => "required|string|max:255"],
             [
-                "name.required" =>
+                "taskName.required" =>
                     "You need to fill the 'Add a new task' input to add a task.",
-                "name.max" =>
+                "taskName.max" =>
                     "Your task name is too long; please keep it within :max characters.",
             ],
         );
@@ -50,7 +45,9 @@ class TaskController extends Controller
         $request
             ->user()
             ->tasks()
-            ->create($validated);
+            ->create([
+                "name" => $validated["taskName"],
+            ]);
 
         return redirect(route("tasks.index"));
     }
@@ -62,7 +59,7 @@ class TaskController extends Controller
     {
         $this->authorize("update", $task);
 
-        $fields = $request->validate(
+        $validated = $request->validate(
             ["completed" => "required|boolean"],
             [
                 "completed" =>
@@ -73,7 +70,7 @@ class TaskController extends Controller
         );
 
         $task->update([
-            "completed_at" => $fields["completed"] ? Date::now() : null,
+            "completed_at" => $validated["completed"] ? Date::now() : null,
         ]);
 
         return redirect(route("tasks.index"));
