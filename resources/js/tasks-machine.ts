@@ -205,7 +205,7 @@ export const tasksMachine = createMachine(
       }),
       discardFailedChanges: assign({
         changelog(context) {
-          return context.changelog.filter((change) => !!change.lastError);
+          return context.changelog.filter((change) => !change.lastError);
         },
       }),
       reload: () => {
