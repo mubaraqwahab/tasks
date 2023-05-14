@@ -94,6 +94,7 @@ class TaskChangeController extends Controller
 
             case "complete":
                 $task = Task::findOrFail($taskId);
+                // TODO: validate that completed_at > created_at?
                 $task->completed_at = $change["created_at"];
                 $task->save();
                 break;

@@ -49,6 +49,10 @@ class TaskController extends Controller
                 "name" => $validated["taskName"],
             ]);
 
+        // TODO: if you ever need to display an "activity log" of sorts on the UI,
+        // then save task changes in this controller too. (You'd also need to modify
+        // the task_changes table schema)
+
         return redirect(route("tasks.index"));
     }
 
