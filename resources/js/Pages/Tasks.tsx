@@ -65,7 +65,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "change",
       changeType: "create",
-      taskName: formData.get("name") as string,
+      taskName: formData.get("taskName") as string,
     });
     form.reset();
   });
