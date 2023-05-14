@@ -7,10 +7,9 @@ import { TaskChange } from "@/types/models";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
 import { useMachine } from "@xstate/react";
-import { useOnline, p } from "@/utils";
+import { p } from "@/utils";
 import { For } from "@/Components/For";
 import { useEffect } from "react";
-import { EventFrom } from "xstate";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -35,13 +34,19 @@ function useTasksMachine(tasks: Task[]) {
   );
 
   console.log(getOfflineChangelog());
-  console.log(state.toStrings().join(", "));
 
   useEffect(() => {
     const handleOnline = () => send({ type: "online" });
+    const handleOffline = () => send({ type: "offline" });
+
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
-  });
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   return [state, send, ...rest] as ReturnType<
     typeof useMachine<typeof tasksMachine>
@@ -50,7 +55,6 @@ function useTasksMachine(tasks: Task[]) {
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const [state, send] = useTasksMachine(tasks);
-  const isOnline = useOnline();
 
   // TODO: replace orderby with custom impl.
   const upcomingTasks = orderBy(
@@ -79,9 +83,9 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
   };
 
   let error = null;
-  if (state.matches("someFailedToSync")) {
+  if (state.matches("tasks.someFailedToSync")) {
     error = state.context.changelog.filter((change) => !!change.lastError);
-  } else if (state.matches("normal.temporaryError.unknownError")) {
+  } else if (state.matches("tasks.normal.temporaryError.unknownError")) {
     error = state.context.error;
   }
 
@@ -93,8 +97,13 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
       <div className="mb-5">
         <p className="flex gap-x-1.5 mb-1.5">
           Status:
-          <span>{isOnline ? "online" : "offline"}</span> &middot;
-          <span>{state.toStrings().at(-1)}</span>
+          <span>
+            {state.toStrings().findLast((s) => s.startsWith("network"))!}
+          </span>{" "}
+          &middot;
+          <span>
+            {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
+          </span>
         </p>
         {(error as any) && (
           <details>
@@ -102,7 +111,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
             <pre className="max-h-40 overflow-y-scroll mt-1 border p-2">
               <code>{JSON.stringify(error, null, 2)}</code>
             </pre>
-            {state.matches("someFailedToSync") && (
+            {state.matches("tasks.someFailedToSync") && (
               <button
                 className="border p-1 bg-gray-100"
                 onClick={() => send({ type: "discardFailed" })}

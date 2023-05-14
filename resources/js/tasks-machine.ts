@@ -15,119 +15,149 @@ type SyncResponseData = {
 export const tasksMachine = createMachine(
   {
     id: "taskManager",
-    initial: "initializing",
     states: {
-      someFailedToSync: {
-        description: "Modal state",
-        on: {
-          discardFailed: {
-            target: "reloading",
-            actions: "discardFailedChanges",
-          },
-        },
-      },
-      normal: {
-        initial: "idle",
+      tasks: {
+        initial: "initializing",
         states: {
-          idle: {
-            always: {
-              target: "syncing",
-              cond: "changelogIsNotEmpty",
-            },
-          },
-          syncing: {
-            invoke: {
-              src: "syncChangelog",
-              onDone: [
-                {
-                  target: "afterSyncing",
-                },
-              ],
-              onError: [
-                {
-                  target: "temporaryError",
-                  cond: "isNetworkError",
-                },
-                {
-                  target: "#taskManager.normal.temporaryError.serverError",
-                  cond: "isServerError",
-                },
-                {
-                  target: "#taskManager.normal.temporaryError.unknownError",
-                },
-              ],
-            },
-          },
-          afterSyncing: {
-            entry: ["updateChangelogWithSyncResult", "resetAutoRetryCount"],
-            always: [
-              {
-                target: "#taskManager.someFailedToSync",
-                cond: "changelogContainsFailedChanges",
-              },
-              {
-                target: "allSynced",
-              },
-            ],
-          },
-          allSynced: {
-            after: {
-              "3000": {
-                target: "#taskManager.normal.idle",
-                actions: [],
-                internal: false,
+          someFailedToSync: {
+            description: "Modal state",
+            on: {
+              discardFailed: {
+                target: "reloading",
+                actions: "discardFailedChanges",
               },
             },
           },
-          temporaryError: {
-            after: {
-              "10000": {
-                target: "#taskManager.normal.syncing",
-                cond: "maxAutoRetryCountNotReached",
-                actions: ["incrementAutoRetryCount"],
-                internal: false,
-              },
-            },
-            initial: "networkError",
+          normal: {
+            initial: "idle",
             states: {
-              networkError: {},
-              serverError: {},
-              unknownError: {
-                entry: "setError",
-                exit: "resetError",
+              idle: {
+                always: {
+                  target: "syncing",
+                  cond: "changelogIsNotEmpty",
+                  in: "#taskManager.network.online",
+                },
+                on: {
+                  online: {},
+                },
+              },
+              syncing: {
+                invoke: {
+                  src: "syncChangelog",
+                  onDone: [
+                    {
+                      target: "afterSyncing",
+                    },
+                  ],
+                  onError: [
+                    {
+                      target: "temporaryError",
+                      cond: "isNetworkError",
+                    },
+                    {
+                      target:
+                        "#taskManager.tasks.normal.temporaryError.serverError",
+                      cond: "isServerError",
+                    },
+                    {
+                      target:
+                        "#taskManager.tasks.normal.temporaryError.unknownError",
+                    },
+                  ],
+                },
+              },
+              afterSyncing: {
+                entry: ["updateChangelogWithSyncResult", "resetAutoRetryCount"],
+                always: [
+                  {
+                    target: "#taskManager.tasks.someFailedToSync",
+                    cond: "changelogContainsFailedChanges",
+                  },
+                  {
+                    target: "allSynced",
+                  },
+                ],
+              },
+              allSynced: {
+                after: {
+                  "3000": {
+                    target: "#taskManager.tasks.normal.idle",
+                    actions: [],
+                    internal: false,
+                  },
+                },
+              },
+              temporaryError: {
+                after: {
+                  "10000": {
+                    target: "#taskManager.tasks.normal.syncing",
+                    cond: "maxAutoRetryCountNotReached",
+                    actions: ["incrementAutoRetryCount"],
+                    internal: false,
+                  },
+                },
+                initial: "networkError",
+                states: {
+                  networkError: {},
+                  serverError: {},
+                  unknownError: {
+                    entry: "setError",
+                    exit: "resetError",
+                  },
+                },
+                on: {
+                  retrySync: {
+                    target: "syncing",
+                  },
+                  online: {
+                    target: "syncing",
+                  },
+                },
               },
             },
             on: {
-              retrySync: {
-                target: "syncing",
+              change: {
+                target: "normal",
+                actions: ["pushToChangelog", "applyLastChange"],
+                internal: false,
               },
+            },
+          },
+          initializing: {
+            description:
+              "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
+            entry: "applyOfflineChanges",
+            always: {
+              target: "normal",
+            },
+          },
+          reloading: {
+            entry: "reload",
+            type: "final",
+          },
+        },
+      },
+      network: {
+        initial: "online",
+        states: {
+          online: {
+            on: {
+              offline: {
+                target: "offline",
+              },
+            },
+          },
+          offline: {
+            on: {
               online: {
-                target: "syncing",
+                target: "online",
               },
             },
           },
         },
-        on: {
-          change: {
-            target: "normal",
-            actions: ["pushToChangelog", "applyLastChange"],
-            internal: false,
-          },
-        },
-      },
-      initializing: {
-        description:
-          "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
-        entry: "applyOfflineChanges",
-        always: {
-          target: "normal",
-        },
-      },
-      reloading: {
-        entry: "reload",
-        type: "final",
       },
     },
+    type: "parallel",
     schema: {
       context: {} as {
         tasks: Task[];
@@ -144,7 +174,8 @@ export const tasksMachine = createMachine(
           }
         | { type: "discardFailed" }
         | { type: "retrySync" }
-        | { type: "online" },
+        | { type: "online" }
+        | { type: "offline" },
       services: {} as {
         syncChangelog: {
           data: SyncResponseData;
