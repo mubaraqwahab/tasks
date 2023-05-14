@@ -78,12 +78,11 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
-  let errors;
+  let error = null;
   if (state.matches("someFailedToSync")) {
-    errors = state.context.changelog.filter((change) => !!change.lastError);
-  } else if (state.matches("normal.temporaryError.networkError")) {
-  } else if (state.matches("normal.temporaryError.serverError")) {
+    error = state.context.changelog.filter((change) => !!change.lastError);
   } else if (state.matches("normal.temporaryError.unknownError")) {
+    error = state.context.error;
   }
 
   return (
@@ -95,20 +94,22 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         <p className="flex gap-x-1.5 mb-1.5">
           Status:
           <span>{isOnline ? "online" : "offline"}</span> &middot;
-          <span>{state.toStrings().join(", ")}</span>
+          <span>{state.toStrings().at(-1)}</span>
         </p>
-        {errors && (
+        {(error as any) && (
           <details>
-            <summary>Errors:</summary>
+            <summary>Error:</summary>
             <pre className="max-h-40 overflow-y-scroll mt-1 border p-2">
-              <code>{JSON.stringify(errors, null, 2)}</code>
+              <code>{JSON.stringify(error, null, 2)}</code>
             </pre>
-            <button
-              className="border p-1 bg-gray-100"
-              onClick={() => send({ type: "discardFailed" })}
-            >
-              Discard failed changes
-            </button>
+            {state.matches("someFailedToSync") && (
+              <button
+                className="border p-1 bg-gray-100"
+                onClick={() => send({ type: "discardFailed" })}
+              >
+                Discard failed changes
+              </button>
+            )}
           </details>
         )}
       </div>
@@ -127,7 +128,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           name="taskName"
           required
           maxLength={255}
-          className="block w-full rounded-lg px-3 py-2 [&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
+          className="block w-full rounded-lg pl-3 pr-11 py-2 [&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
           placeholder=" "
         />
         {/* placeholder=" " is required above for :placeholder-shown to work */}
@@ -140,7 +141,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         <button
           type="submit"
           aria-label="Add task"
-          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 border rounded-md has-tooltip"
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 border bg-white rounded-md has-tooltip"
         >
           {/* <!-- TODO: extract icons into components? --> */}
           <svg

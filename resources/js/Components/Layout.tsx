@@ -1,5 +1,5 @@
 import { AuthContext } from "@/context";
-import { PageProps } from "@/types/models";
+import { PageProps } from "@/types";
 import { Head } from "@inertiajs/react";
 import { PropsWithChildren } from "react";
 
@@ -31,9 +31,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
         </div>
       </header>
       <main>
-        <div className="container py-6" v-bind="$attrs">
-          {children}
-        </div>
+        <div className="container max-w-2xl py-6">{children}</div>
       </main>
     </AuthContext.Provider>
   );
