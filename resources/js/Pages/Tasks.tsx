@@ -15,6 +15,7 @@ import { useMachine } from "@xstate/react";
 import { p } from "@/utils";
 import { For } from "@/Components/For";
 import { useEffect } from "react";
+import { PlusIcon } from "@heroicons/react/24/solid";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -172,19 +173,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           aria-label="Add task"
           className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 border bg-white rounded-md has-tooltip"
         >
-          {/* <!-- TODO: extract icons into components? --> */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-5 h-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <PlusIcon className="w-5 h-5" />
         </button>
       </Form>
 
