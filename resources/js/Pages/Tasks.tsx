@@ -30,7 +30,18 @@ function getOfflineChangelog(): TaskChange[] {
 
 function useTasksMachine(tasks: Task[]) {
   const [state, send, ...rest] = useMachine(tasksMachine, {
-    context: { tasks, changelog: getOfflineChangelog() },
+    context: {
+      tasks,
+      changelog: getOfflineChangelog(),
+      transformTasks: (tasks) => {
+        // TODO: replace orderby with custom impl?
+        return orderBy(
+          tasks.filter((task) => task.completed_at === null),
+          ["created_at"],
+          ["desc"]
+        );
+      },
+    },
   });
 
   localStorage.setItem(
@@ -38,7 +49,7 @@ function useTasksMachine(tasks: Task[]) {
     JSON.stringify(state.context.changelog)
   );
 
-  console.log(getOfflineChangelog());
+  console.log("Offline changelog", getOfflineChangelog());
 
   useEffect(() => {
     const handleOnline = () => send({ type: "online" });
@@ -61,12 +72,7 @@ function useTasksMachine(tasks: Task[]) {
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const [state, send] = useTasksMachine(tasks);
 
-  // TODO: replace orderby with custom impl.
-  const upcomingTasks = orderBy(
-    state.context.tasks.filter((task) => task.completed_at === null),
-    ["created_at"],
-    ["desc"]
-  );
+  const upcomingTasks = state.context.tasks;
 
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;

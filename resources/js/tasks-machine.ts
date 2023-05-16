@@ -164,6 +164,7 @@ export const tasksMachine = createMachine(
         changelog: TaskChange[];
         autoRetryCount: number;
         error: unknown;
+        transformTasks: (tasks: Task[]) => Task[];
       },
       events: {} as
         | { type: "change"; changeType: "create"; taskName: string }
@@ -193,6 +194,7 @@ export const tasksMachine = createMachine(
       changelog: [],
       autoRetryCount: 0,
       error: null,
+      transformTasks: (tasks) => tasks,
     },
     tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     predictableActionArguments: true,
@@ -202,12 +204,16 @@ export const tasksMachine = createMachine(
     actions: {
       applyOfflineChanges: assign({
         tasks(context) {
-          return context.changelog.reduce(applyChange, context.tasks);
+          return context.transformTasks(
+            context.changelog.reduce(applyChange, context.tasks)
+          );
         },
       }),
       applyLastChange: assign({
         tasks(context) {
-          return applyChange(context.tasks, context.changelog.at(-1)!);
+          return context.transformTasks(
+            applyChange(context.tasks, context.changelog.at(-1)!)
+          );
         },
       }),
       pushToChangelog: assign({
