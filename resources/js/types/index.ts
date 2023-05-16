@@ -9,6 +9,11 @@ export interface CompleteTaskLiEvent extends TaskLiEvent {
   type: "complete";
 }
 
+export interface EditTaskLiEvent extends TaskLiEvent {
+  type: "edit";
+  taskName: string;
+}
+
 export interface DeleteTaskLiEvent extends TaskLiEvent {
   type: "delete";
 }

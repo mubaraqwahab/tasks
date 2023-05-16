@@ -169,7 +169,13 @@ export const tasksMachine = createMachine(
         | { type: "change"; changeType: "create"; taskName: string }
         | {
             type: "change";
-            changeType: Exclude<TaskChange["type"], "create">;
+            changeType: "edit";
+            taskId: string;
+            taskName: string;
+          }
+        | {
+            type: "change";
+            changeType: Exclude<TaskChange["type"], "create" | "edit">;
             taskId: string;
           }
         | { type: "discardFailed" }
@@ -213,6 +219,12 @@ export const tasksMachine = createMachine(
               ? {
                   type: event.changeType,
                   task_id: crypto.randomUUID(),
+                  task_name: event.taskName,
+                }
+              : event.changeType === "edit"
+              ? {
+                  type: event.changeType,
+                  task_id: event.taskId,
                   task_name: event.taskName,
                 }
               : {
@@ -296,6 +308,10 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
       task.id === change.task_id
         ? { ...task, completed_at: change.created_at }
         : task
+    );
+  } else if (change.type === "edit") {
+    return tasks.map((task) =>
+      task.id === change.task_id ? { ...task, name: change.task_name } : task
     );
   } else if (change.type === "delete") {
     return tasks.filter((task) => task.id !== change.task_id);

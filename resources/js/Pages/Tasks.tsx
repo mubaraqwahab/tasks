@@ -2,7 +2,12 @@ import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import { tasksMachine } from "@/tasks-machine";
-import { CompleteTaskLiEvent, DeleteTaskLiEvent, PageProps } from "@/types";
+import {
+  CompleteTaskLiEvent,
+  DeleteTaskLiEvent,
+  EditTaskLiEvent,
+  PageProps,
+} from "@/types";
 import { TaskChange } from "@/types/models";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
@@ -76,6 +81,15 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
   const handleCompleteTask = (e: CompleteTaskLiEvent) => {
     send({ type: "change", changeType: "complete", taskId: e.taskId });
+  };
+
+  const handleEditTask = (e: EditTaskLiEvent) => {
+    send({
+      type: "change",
+      changeType: "edit",
+      taskId: e.taskId,
+      taskName: e.taskName,
+    });
   };
 
   const handleDeleteTask = (e: DeleteTaskLiEvent) => {
@@ -175,6 +189,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
             task={task}
             key={task.id}
             onComplete={handleCompleteTask}
+            onEdit={handleEditTask}
             onDelete={handleDeleteTask}
           />
         )}

@@ -61,9 +61,15 @@ class TaskChangeController extends Controller
             data: $change,
             rules: [
                 "id" => "required|uuid",
-                "type" => ["required", "in:create,complete,uncomplete,delete"],
+                "type" => [
+                    "required",
+                    "in:create,complete,uncomplete,edit,delete",
+                ],
                 "task_id" => "required|uuid",
-                "task_name" => "required_if:type,create",
+                "task_name" => [
+                    "required_if:type,create",
+                    "required_if:type,edit",
+                ],
                 "created_at" => "required|date",
             ],
             attributes: [
@@ -102,6 +108,12 @@ class TaskChangeController extends Controller
             case "uncomplete":
                 $task = Task::findOrFail($taskId);
                 $task->completed_at = null;
+                $task->save();
+                break;
+
+            case "edit":
+                $task = Task::findOrFail($taskId);
+                $task->name = $change["task_name"];
                 $task->save();
                 break;
 
