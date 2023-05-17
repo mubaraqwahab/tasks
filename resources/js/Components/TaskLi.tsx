@@ -8,6 +8,7 @@ import Form from "@/Components/Form";
 import { p } from "@/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useId, useState } from "react";
 
 type TaskLiProps = {
@@ -57,7 +58,7 @@ export default function TaskLi({
       >
         <button
           type="submit"
-          className="p-1 border rounded-full"
+          className="p-1 border rounded-full bg-white hover:bg-gray-100"
           name="completed"
           value={completed_at ? 0 : 1}
           aria-label={
@@ -65,7 +66,7 @@ export default function TaskLi({
           }
           aria-describedby={nameElementId}
         >
-          <CheckIcon className="w-4 h-4" />
+          <CheckIcon className="w-3.5 h-3.5" />
         </button>
       </Form>
 
@@ -73,42 +74,55 @@ export default function TaskLi({
         {name}
       </p>
 
-      <Dialog.Root open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <Dialog.Trigger asChild>
-          <button
-            type="submit"
-            aria-describedby={nameElementId}
-            aria-label="Edit"
-            className="inline-block p-1 border rounded-md mr-1"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay className="" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl">
-            <Dialog.Title className="font-medium mb-3">Edit task</Dialog.Title>
-            <Form method="PATCH" id="editTaskForm" onSubmit={handleEdit}>
-              <label className="block" htmlFor={editNameInputId}>
-                Name
-              </label>
-              <input
-                className="border p-1 mb-3"
-                id={editNameInputId}
-                name="taskName"
-                defaultValue={name}
-              />
-              <div>
-                <button className="border rounded-md p-1" form="editTaskForm">
-                  Save changes
+      <div className="mr-1">
+        <Dialog.Root open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <Dialog.Trigger asChild>
+            <button
+              type="submit"
+              aria-describedby={nameElementId}
+              aria-label="Edit"
+              className="p-1 border rounded-md bg-white hover:bg-gray-100"
+            >
+              <PencilIcon className="w-3.5 h-3.5" />
+            </button>
+          </Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-gray-900/50" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl w-[min(100vw-2rem,28rem)]">
+              <Dialog.Title className="font-semibold text-lg mb-3">
+                Edit task
+              </Dialog.Title>
+              <Form method="PATCH" id="editTaskForm" onSubmit={handleEdit}>
+                <label className="inline-block mb-1" htmlFor={editNameInputId}>
+                  Name
+                </label>
+                <input
+                  className="block w-full border rounded py-1 px-2 mb-4"
+                  id={editNameInputId}
+                  name="taskName"
+                  defaultValue={name}
+                />
+                <div>
+                  <button
+                    className="block border rounded-md px-3 py-1 ml-auto font-medium bg-white hover:bg-gray-100"
+                    form="editTaskForm"
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </Form>
+              <Dialog.Close asChild>
+                <button
+                  className="p-1 rounded bg-white hover:bg-gray-100 absolute top-5 right-5"
+                  aria-label="Close"
+                >
+                  <XMarkIcon className="w-5 h-5" />
                 </button>
-              </div>
-            </Form>
-            {/* <Dialog.Close asChild>
-            </Dialog.Close> */}
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+              </Dialog.Close>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </div>
 
       <Form
         action={route("tasks.destroy", id)}
@@ -120,9 +134,9 @@ export default function TaskLi({
           type="submit"
           aria-describedby={nameElementId}
           aria-label="Delete"
-          className="p-1 border rounded-md"
+          className="p-1 border rounded-md bg-white hover:bg-gray-100"
         >
-          <TrashIcon className="w-4 h-4" />
+          <TrashIcon className="w-3.5 h-3.5" />
         </button>
       </Form>
     </li>
