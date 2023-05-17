@@ -1,9 +1,11 @@
 import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head } from "@inertiajs/react";
-import { PropsWithChildren, useId } from "react";
+import { PropsWithChildren, useId, useState } from "react";
 import Form from "@/Components/Form";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { clsx } from "clsx";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
@@ -11,6 +13,7 @@ type LayoutProps = PropsWithChildren<{
 }>;
 
 export default function Layout({ auth, title, children }: LayoutProps) {
+  const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const logOutFormId = useId();
   const dropdownMenuItemClass =
     "px-2 py-1 block w-full text-left rounded-md hover:bg-gray-100";
@@ -20,11 +23,27 @@ export default function Layout({ auth, title, children }: LayoutProps) {
       <Head title={title} />
       <header className="border-b">
         <div className="container flex justify-between items-center py-3">
-          <a href="/">Tasks</a>
+          <a href="/" className="font-medium">
+            Tasks
+          </a>
 
-          <DropdownMenu.Root>
+          <DropdownMenu.Root
+            open={isDropdownMenuOpen}
+            onOpenChange={setIsDropdownMenuOpen}
+          >
             <DropdownMenu.Trigger asChild>
-              <button type="button">{auth.user.name}</button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5"
+              >
+                <span>{auth.user.name}</span>
+                <ChevronDownIcon
+                  className={clsx(
+                    "h-4 w-4 transition-transform duration-200",
+                    isDropdownMenuOpen && "rotate-180"
+                  )}
+                />
+              </button>
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Portal>
