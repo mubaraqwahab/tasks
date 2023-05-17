@@ -3,6 +3,7 @@ import { PageProps } from "@/types";
 import { Head } from "@inertiajs/react";
 import { PropsWithChildren } from "react";
 import Form from "@/Components/Form";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
@@ -16,7 +17,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
       <header className="border-b">
         <div className="container flex justify-between items-center py-3">
           <a href="/">Tasks</a>
-          <details>
+          {/* <details>
             <summary>{auth.user.name}</summary>
             <ul>
               <li>
@@ -28,7 +29,35 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                 </Form>
               </li>
             </ul>
-          </details>
+          </details> */}
+
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button type="button">{auth.user.name}</button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content align="end">
+                <DropdownMenu.Item asChild>
+                  {/* TODO: icon */}
+                  <a href="/account">Account</a>
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item asChild>
+                  {/* TODO: icon */}
+                  <a href="/TODO">Completed tasks</a>
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item asChild>
+                  {/* TODO: icon */}
+                  <Form method="POST" action={route("logout")}>
+                    <button type="submit">Log out</button>
+                  </Form>
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
       </header>
       <main>
