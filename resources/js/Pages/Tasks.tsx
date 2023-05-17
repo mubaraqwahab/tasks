@@ -29,19 +29,15 @@ function getOfflineChangelog(): TaskChange[] {
   return JSON.parse(changelogAsJSON) as TaskChange[];
 }
 
-function useTasksMachine(tasks: Task[]) {
+function useTasksMachine(
+  tasks: Task[],
+  transformTasks: (tasks: Task[]) => Task[]
+) {
   const [state, send, ...rest] = useMachine(tasksMachine, {
     context: {
       tasks,
       changelog: getOfflineChangelog(),
-      transformTasks: (tasks) => {
-        // TODO: replace orderby with custom impl?
-        return orderBy(
-          tasks.filter((task) => task.completed_at === null),
-          ["created_at"],
-          ["desc"]
-        );
-      },
+      transformTasks,
     },
   });
 
@@ -71,7 +67,14 @@ function useTasksMachine(tasks: Task[]) {
 }
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
-  const [state, send] = useTasksMachine(tasks);
+  const [state, send] = useTasksMachine(tasks, (tasks) => {
+    // TODO: replace orderby with custom impl?
+    return orderBy(
+      tasks.filter((task) => task.completed_at === null),
+      ["created_at"],
+      ["desc"]
+    );
+  });
 
   const upcomingTasks = state.context.tasks;
 
