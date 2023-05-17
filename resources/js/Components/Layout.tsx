@@ -1,11 +1,11 @@
 import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { PropsWithChildren, useId, useState } from "react";
 import Form from "@/Components/Form";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { clsx } from "clsx";
+import clsx from "clsx";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
@@ -23,9 +23,9 @@ export default function Layout({ auth, title, children }: LayoutProps) {
       <Head title={title} />
       <header className="border-b">
         <div className="container flex justify-between items-center py-3">
-          <a href="/" className="font-medium">
+          <Link href="/" className="font-medium">
             Tasks
-          </a>
+          </Link>
 
           <DropdownMenu.Root
             open={isDropdownMenuOpen}
@@ -49,20 +49,20 @@ export default function Layout({ auth, title, children }: LayoutProps) {
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 align="end"
-                sideOffset={12}
+                sideOffset={10}
                 className="w-48 border rounded-md shadow-lg p-2 bg-white"
               >
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}
-                  <a href="/account">Account</a>
+                  <Link href={route("profile.edit")}>Account</Link>
                 </DropdownMenu.Item>
 
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}
-                  <a href="/TODO">Completed tasks</a>
+                  <Link href="/TODO">Completed tasks</Link>
                 </DropdownMenu.Item>
 
-                <DropdownMenu.Separator className="border-t my-2" />
+                <DropdownMenu.Separator className="border-t my-1.5" />
 
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}

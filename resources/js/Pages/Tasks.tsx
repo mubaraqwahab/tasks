@@ -16,6 +16,7 @@ import { p } from "@/utils";
 import { For } from "@/Components/For";
 import { useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
+import clsx from "clsx";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
@@ -161,20 +162,23 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           name="taskName"
           required
           maxLength={255}
-          className="block w-full rounded-lg pl-3 pr-11 py-2 [&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
+          className={clsx(
+            "block w-full rounded-lg pl-3 pr-11 py-2",
+            "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
+          )}
           placeholder=" "
         />
         {/* placeholder=" " is required above for :placeholder-shown to work */}
         <label
           htmlFor="taskName"
-          className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
         >
           Add a new task
         </label>
         <button
           type="submit"
           aria-label="Add task"
-          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 border bg-white rounded-md has-tooltip"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 border bg-white rounded-md hover:bg-gray-100"
         >
           <PlusIcon className="w-5 h-5" />
         </button>
