@@ -120,6 +120,14 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
             "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
           )}
           placeholder=" "
+          onInvalid={(e) => {
+            const input = e.target as HTMLInputElement;
+            // Don't worry about other errors, as the browser's default messages suffice
+            if (input.validity.patternMismatch) {
+              input.setCustomValidity("The task name can't be just whitespace");
+              input.reportValidity();
+            }
+          }}
         />
         {/* placeholder=" " is required above for :placeholder-shown to work */}
         <label
