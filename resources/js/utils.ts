@@ -13,3 +13,19 @@ export function p<E extends FormEvent>(listener: (e: E) => void) {
 }
 
 export const NOT_WHITESPACE_ONLY_PATTERN = String.raw`\s*\S(.*\S)?\s*`;
+
+export const taskNameInputValidationProps: JSX.IntrinsicElements["input"] = {
+  type: "text",
+  required: true,
+  maxLength: 255,
+  // Not whitespace only
+  pattern: String.raw`\s*\S(.*\S)?\s*`,
+  onInvalid: (e) => {
+    const input = e.target as HTMLInputElement;
+    // Don't worry about other errors, as the browser's default messages suffice
+    if (input.validity.patternMismatch) {
+      input.setCustomValidity("The task name can't be just whitespace");
+      input.reportValidity();
+    }
+  },
+};

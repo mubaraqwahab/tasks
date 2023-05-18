@@ -11,7 +11,7 @@ import {
 } from "@/types";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
-import { NOT_WHITESPACE_ONLY_PATTERN, p } from "@/utils";
+import { p, taskNameInputValidationProps } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 
@@ -109,25 +109,14 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         onSubmit={handleCreateTask}
       >
         <input
-          type="text"
           id="taskName"
           name="taskName"
-          required
-          maxLength={255}
-          pattern={NOT_WHITESPACE_ONLY_PATTERN}
+          {...taskNameInputValidationProps}
           className={clsx(
             "block w-full rounded-lg pl-3 pr-11 py-2",
             "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
           )}
           placeholder=" "
-          onInvalid={(e) => {
-            const input = e.target as HTMLInputElement;
-            // Don't worry about other errors, as the browser's default messages suffice
-            if (input.validity.patternMismatch) {
-              input.setCustomValidity("The task name can't be just whitespace");
-              input.reportValidity();
-            }
-          }}
         />
         {/* placeholder=" " is required above for :placeholder-shown to work */}
         <label
