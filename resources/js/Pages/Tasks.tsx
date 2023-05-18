@@ -115,7 +115,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           maxLength={255}
           pattern={NONEMPTY_WHEN_TRIMMED_PATTERN}
           className={clsx(
-            "border block w-full rounded-lg pl-3 pr-11 py-2 shadow",
+            "border border-gray-400 block w-full rounded-lg pl-3 pr-11 py-2 shadow",
             "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
           )}
           placeholder=" "
