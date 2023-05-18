@@ -5,7 +5,7 @@ import {
 } from "@/types";
 import { Task } from "@/types/models";
 import Form from "@/Components/Form";
-import { p } from "@/utils";
+import { NOT_WHITESPACE_ONLY_PATTERN, p } from "@/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
@@ -40,7 +40,7 @@ export default function TaskLi({
     onEdit?.({
       type: "edit",
       taskId: id,
-      taskName: formData.get("taskName") as string,
+      taskName: (formData.get("taskName") as string).trim(),
     });
     setIsEditDialogOpen(false);
   });
@@ -100,6 +100,9 @@ export default function TaskLi({
                   className="block w-full border rounded py-1 px-2 mb-4"
                   id={editNameInputId}
                   name="taskName"
+                  required
+                  maxLength={255}
+                  pattern={NOT_WHITESPACE_ONLY_PATTERN}
                   defaultValue={name}
                 />
                 <div>

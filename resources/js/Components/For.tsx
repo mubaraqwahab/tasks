@@ -13,6 +13,11 @@ export type ForProps<T> = React.HTMLAttributes<HTMLUListElement> & {
  * A convenience component for rendering a list of items.
  * Inspired by Solid JS
  */
-export function For<T>({ each, render, fallback, ...rest }: ForProps<T>) {
+export default function For<T>({
+  each,
+  render,
+  fallback,
+  ...rest
+}: ForProps<T>) {
   return <>{each.length ? <ul {...rest}>{each.map(render)}</ul> : fallback}</>;
 }

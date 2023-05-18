@@ -1,71 +1,23 @@
 import Form from "@/Components/Form";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
-import { tasksMachine } from "@/tasks-machine";
+import For from "@/Components/For";
+import { useTasksMachine } from "@/tasks-machine";
 import {
   CompleteTaskLiEvent,
   DeleteTaskLiEvent,
   EditTaskLiEvent,
   PageProps,
 } from "@/types";
-import { TaskChange } from "@/types/models";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
-import { useMachine } from "@xstate/react";
-import { p } from "@/utils";
-import { For } from "@/Components/For";
-import { useEffect } from "react";
+import { NOT_WHITESPACE_ONLY_PATTERN, p } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
-
-function getOfflineChangelog(): TaskChange[] {
-  const changelogAsJSON = localStorage.getItem("taskChangelog") || "[]";
-  // Note: if the persisted changelog isn't an array of task changes,
-  // or not an array at all, then someone must have tampered with it.
-  // Don't defend against such a situation on the client side.
-  return JSON.parse(changelogAsJSON) as TaskChange[];
-}
-
-function useTasksMachine(
-  tasks: Task[],
-  transformTasks: (tasks: Task[]) => Task[]
-) {
-  const [state, send, ...rest] = useMachine(tasksMachine, {
-    context: {
-      tasks,
-      changelog: getOfflineChangelog(),
-      transformTasks,
-    },
-  });
-
-  localStorage.setItem(
-    "taskChangelog",
-    JSON.stringify(state.context.changelog)
-  );
-
-  console.log("Offline changelog", getOfflineChangelog());
-
-  useEffect(() => {
-    const handleOnline = () => send({ type: "online" });
-    const handleOffline = () => send({ type: "offline" });
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  return [state, send, ...rest] as ReturnType<
-    typeof useMachine<typeof tasksMachine>
-  >;
-}
 
 export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const [state, send] = useTasksMachine(tasks, (tasks) => {
@@ -85,7 +37,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({
       type: "change",
       changeType: "create",
-      taskName: formData.get("taskName") as string,
+      taskName: (formData.get("taskName") as string).trim(),
     });
     form.reset();
   });
@@ -162,6 +114,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           name="taskName"
           required
           maxLength={255}
+          pattern={NOT_WHITESPACE_ONLY_PATTERN}
           className={clsx(
             "block w-full rounded-lg pl-3 pr-11 py-2",
             "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"

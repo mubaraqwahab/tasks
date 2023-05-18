@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent } from "react";
 
 /**
  * Prevent default without typing `e.preventDefault()`
@@ -11,3 +11,5 @@ export function p<E extends FormEvent>(listener: (e: E) => void) {
     listener(e);
   };
 }
+
+export const NOT_WHITESPACE_ONLY_PATTERN = String.raw`\s*\S(.*\S)?\s*`;

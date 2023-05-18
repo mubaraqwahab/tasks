@@ -1,6 +1,8 @@
 import { createMachine, assign } from "xstate";
 import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
+import { useMachine } from "@xstate/react";
+import { useEffect } from "react";
 
 type SyncErrorStatus = {
   type: "error";
@@ -325,4 +327,49 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
     // TODO: is this the best you can do?
     throw new Error();
   }
+}
+
+function getOfflineChangelog(): TaskChange[] {
+  const changelogAsJSON = localStorage.getItem("taskChangelog") || "[]";
+  // Note: if the persisted changelog isn't an array of task changes,
+  // or not an array at all, then someone must have tampered with it.
+  // Don't defend against such a situation on the client side.
+  return JSON.parse(changelogAsJSON) as TaskChange[];
+}
+
+export function useTasksMachine(
+  tasks: Task[],
+  transformTasks: (tasks: Task[]) => Task[]
+) {
+  const [state, send, ...rest] = useMachine(tasksMachine, {
+    context: {
+      tasks,
+      changelog: getOfflineChangelog(),
+      transformTasks,
+    },
+  });
+
+  localStorage.setItem(
+    "taskChangelog",
+    JSON.stringify(state.context.changelog)
+  );
+
+  console.log("Offline changelog", getOfflineChangelog());
+
+  useEffect(() => {
+    const handleOnline = () => send({ type: "online" });
+    const handleOffline = () => send({ type: "offline" });
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  return [state, send, ...rest] as ReturnType<
+    typeof useMachine<typeof tasksMachine>
+  >;
 }
