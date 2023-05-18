@@ -5,7 +5,7 @@ import {
 } from "@/types";
 import { Task } from "@/types/models";
 import Form from "@/Components/Form";
-import { NOT_WHITESPACE_ONLY_PATTERN, p } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
@@ -102,7 +102,7 @@ export default function TaskLi({
                   name="taskName"
                   required
                   maxLength={255}
-                  pattern={NOT_WHITESPACE_ONLY_PATTERN}
+                  pattern={NONEMPTY_WHEN_TRIMMED_PATTERN}
                   defaultValue={name}
                 />
                 <div>

@@ -11,7 +11,7 @@ import {
 } from "@/types";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
-import { p, taskNameInputValidationProps } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 
@@ -111,7 +111,9 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         <input
           id="taskName"
           name="taskName"
-          {...taskNameInputValidationProps}
+          required
+          maxLength={255}
+          pattern={NONEMPTY_WHEN_TRIMMED_PATTERN}
           className={clsx(
             "block w-full rounded-lg pl-3 pr-11 py-2",
             "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
