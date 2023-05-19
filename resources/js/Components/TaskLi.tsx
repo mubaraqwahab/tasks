@@ -24,6 +24,8 @@ type TaskLiProps = {
   onDelete?: (e: DeleteTaskLiEvent) => void;
 };
 
+// TODO: auto close the dropdown when the edit/delete dialog is closed.
+
 export default function TaskLi({
   task,
   onComplete,
