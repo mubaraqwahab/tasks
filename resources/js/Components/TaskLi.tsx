@@ -83,7 +83,7 @@ export default function TaskLi({
       </p>
 
       <div>
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <button
               type="button"

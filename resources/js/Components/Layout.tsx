@@ -28,6 +28,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
           </Link>
 
           <DropdownMenu.Root
+            modal={false}
             open={isDropdownMenuOpen}
             onOpenChange={setIsDropdownMenuOpen}
           >
