@@ -95,7 +95,7 @@ export default function TaskLi({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className="w-44">
+            <DropdownMenu.Content sideOffset={8} className="w-44 border rounded-md shadow-lg p-2 bg-white">
               <DropdownMenu.Label>Actions</DropdownMenu.Label>
               <DropdownMenu.Item asChild>
                 <Dialog.Root
@@ -105,7 +105,7 @@ export default function TaskLi({
                   <Dialog.Trigger asChild>
                     <button
                       type="button"
-                      className="flex items-center gap-1 p-1 border rounded-md bg-white hover:bg-gray-100"
+                      className="flex items-center gap-1 px-2 py-1 w-full text-left rounded-md hover:bg-gray-100"
                     >
                       <PencilIcon aria-hidden="true" className="w-3.5 h-3.5" />
                       Edit
@@ -154,10 +154,7 @@ export default function TaskLi({
                   </Dialog.Portal>
                 </Dialog.Root>
               </DropdownMenu.Item>
-              <DropdownMenu.Item
-                asChild
-                className="p-1 border rounded-md bg-white hover:bg-gray-100"
-              >
+              <DropdownMenu.Item asChild>
                 <Dialog.Root
                   open={isDeleteDialogOpen}
                   onOpenChange={setIsDeleteDialogOpen}
@@ -165,7 +162,7 @@ export default function TaskLi({
                   <Dialog.Trigger asChild>
                     <button
                       type="button"
-                      className="flex items-center gap-1 p-1 border rounded-md bg-white hover:bg-gray-100"
+                      className="flex items-center gap-1 px-2 py-1 w-full text-left rounded-md hover:bg-gray-100"
                     >
                       <TrashIcon aria-hidden="true" className="w-3.5 h-3.5" />
                       Delete
