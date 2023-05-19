@@ -95,7 +95,7 @@ export default function TaskLi({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content sideOffset={8} className="w-44 border rounded-md shadow-lg p-2 bg-white">
+            <DropdownMenu.Content loop sideOffset={8} className="w-44 border rounded-md shadow-lg p-2 bg-white">
               <DropdownMenu.Label>Actions</DropdownMenu.Label>
               <DropdownMenu.Item asChild>
                 <Dialog.Root
