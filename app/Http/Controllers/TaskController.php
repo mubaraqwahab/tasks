@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
-use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,11 +17,17 @@ class TaskController extends Controller
      */
     public function index(): Response
     {
+        $completedTasksQuery = Task::with("user")
+            ->whereNotNull("completed_at")
+            ->latest("completed_at");
+
         $tasks = Task::with("user")
             ->whereNull("completed_at")
             ->latest()
+            ->union($completedTasksQuery)
             ->get();
 
+        // TODO: you may need to split the two tasks when you start paginating
         return Inertia::render("Tasks", [
             "tasks" => $tasks,
         ]);
@@ -53,7 +59,7 @@ class TaskController extends Controller
         // then save task changes in this controller too. (You'd also need to modify
         // the task_changes table schema)
 
-        return redirect(route("tasks.index"));
+        return redirect(route("tasks.upcomingIndex"));
     }
 
     /**
@@ -64,20 +70,33 @@ class TaskController extends Controller
         $this->authorize("update", $task);
 
         $validated = $request->validate(
-            ["completed" => "required|boolean"],
+            [
+                "completed" => "prohibits:taskName|boolean",
+                "taskName" => "prohibits:completed|string|max:255",
+            ],
             [
                 "completed" =>
                     "Strange, we couldn't update your task. Please try again.",
-                // "completed.boolean" =>
-                //     "Strange, we couldn't update your task. Refresh your browser window, then try again.",
+                "taskName" =>
+                    "Strange, we couldn't update your task. Please try again.",
             ],
         );
 
-        $task->update([
-            "completed_at" => $validated["completed"] ? Date::now() : null,
-        ]);
+        if (Arr::has($validated, "completed")) {
+            $task->update([
+                "completed_at" => $validated["completed"] ? Date::now() : null,
+            ]);
 
-        return redirect(route("tasks.index"));
+            if (!$validated["completed"]) {
+                return redirect(route("tasks.completedIndex"));
+            }
+        } else {
+            $task->update([
+                "name" => $validated["taskName"],
+            ]);
+        }
+
+        return redirect(route("tasks.upcomingIndex"));
     }
 
     /**
@@ -87,6 +106,7 @@ class TaskController extends Controller
     {
         $this->authorize("delete", $task);
         $task->delete();
+        // TODO: decide whether to go to upcoming or completed
         return redirect(route("tasks.index"));
     }
 }

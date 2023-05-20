@@ -52,19 +52,12 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                 align="end"
                 sideOffset={10}
                 loop
-                className="w-56 border rounded-md shadow-lg p-2 bg-white"
+                className="w-56 border rounded-md shadow-lg p-1.5 bg-white"
               >
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}
                   <Link href={route("profile.edit")}>Account</Link>
                 </DropdownMenu.Item>
-
-                <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
-                  {/* TODO: icon */}
-                  <Link href="/TODO">Completed tasks</Link>
-                </DropdownMenu.Item>
-
-                <DropdownMenu.Separator className="border-t my-1.5" />
 
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}

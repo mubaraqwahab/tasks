@@ -14,22 +14,30 @@ import orderBy from "lodash.orderby";
 import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
+import * as Form from "@radix-ui/react-form";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { useState } from "react";
 
 type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
 
-export default function TasksPage({ auth, tasks }: TaskPageProps) {
-  const [state, send] = useTasksMachine(tasks, (tasks) => {
-    // TODO: replace orderby with custom impl?
-    return orderBy(
-      tasks.filter((task) => task.completed_at === null),
-      ["created_at"],
-      ["desc"]
-    );
-  });
+export default function UpcomingPage({ auth, tasks }: TaskPageProps) {
+  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
-  const upcomingTasks = state.context.tasks;
+  const [state, send] = useTasksMachine(tasks);
+
+  const upcomingTasks = orderBy(
+    state.context.tasks.filter((task) => task.completed_at === null),
+    ["created_at"],
+    ["desc"]
+  );
+
+  const completedTasks = orderBy(
+    state.context.tasks.filter((task) => task.completed_at !== null),
+    ["completed_at"],
+    ["desc"]
+  );
 
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
@@ -102,39 +110,44 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
       {/* <div className="mb-3">Errors? { JSON.stringify($page.props.errors) }</div> */}
 
-      <MyForm
-        method="POST"
-        action={route("tasks.store")}
-        className="mb-6 relative"
-        onSubmit={handleCreateTask}
-      >
-        <input
-          id="taskName"
-          name="taskName"
-          required
-          maxLength={255}
-          pattern={NONEMPTY_WHEN_TRIMMED_PATTERN}
-          className={clsx(
-            "border border-gray-400 block w-full rounded-lg pl-3 pr-11 py-2 shadow",
-            "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
-          )}
-          placeholder=" "
-        />
-        {/* placeholder=" " is required above for :placeholder-shown to work */}
-        <label
-          htmlFor="taskName"
-          className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
+      <Form.Root asChild>
+        <MyForm
+          method="POST"
+          action={route("tasks.store")}
+          className="mb-6 relative"
+          onSubmit={handleCreateTask}
         >
-          Add a new task
-        </label>
-        <button
-          type="submit"
-          aria-label="Add task"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 border bg-white rounded-md hover:bg-gray-100"
-        >
-          <PlusIcon className="w-5 h-5" />
-        </button>
-      </MyForm>
+          <Form.Field name="taskName">
+            {/* TODO: how to display these? And what about server errors? */}
+            {/* <Form.Message match="patternMismatch" className="text-sm">
+              Task name can't be just whitespace
+            </Form.Message>
+            <Form.Message match="valueMissing" className="text-sm">
+              Please enter a task name
+            </Form.Message> */}
+            <Form.Control
+              required
+              maxLength={255}
+              pattern={NONEMPTY_WHEN_TRIMMED_PATTERN}
+              className={clsx(
+                "border border-gray-400 block w-full rounded-lg pl-3 pr-11 py-2 shadow",
+                "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
+              )}
+              placeholder=" "
+            />
+            {/* placeholder=" " is required above for :placeholder-shown to work */}
+            <Form.Label className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">
+              Add a new task
+            </Form.Label>
+          </Form.Field>
+          <Form.Submit
+            aria-label="Add task"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 border bg-white rounded-md hover:bg-gray-100"
+          >
+            <PlusIcon className="w-5 h-5" />
+          </Form.Submit>
+        </MyForm>
+      </Form.Root>
 
       <For
         each={upcomingTasks}
@@ -150,6 +163,36 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         fallback={<p>No tasks?</p>}
         className="mb-8"
       />
+
+      <details
+        onToggle={(e) => {
+          const details = e.target as HTMLDetailsElement;
+          setIsCompletedTasksOpen(details.open);
+        }}
+      >
+        <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
+          <ChevronDownIcon
+            className={clsx(
+              "h-5 w-5 transition-transform duration-200",
+              isCompletedTasksOpen && "rotate-180"
+            )}
+          />
+          Completed tasks
+        </summary>
+        <For
+          each={completedTasks}
+          render={(task) => (
+            <TaskLi
+              task={task}
+              key={task.id}
+              onComplete={handleCompleteTask}
+              onDelete={handleDeleteTask}
+            />
+          )}
+          fallback={<p>No tasks?</p>}
+          className="mb-8"
+        />
+      </details>
     </Layout>
   );
 }

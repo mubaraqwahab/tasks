@@ -166,7 +166,6 @@ export const tasksMachine = createMachine(
         changelog: TaskChange[];
         autoRetryCount: number;
         error: unknown;
-        transformTasks: (tasks: Task[]) => Task[];
       },
       events: {} as
         | { type: "change"; changeType: "create"; taskName: string }
@@ -196,7 +195,6 @@ export const tasksMachine = createMachine(
       changelog: [],
       autoRetryCount: 0,
       error: null,
-      transformTasks: (tasks) => tasks,
     },
     tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     predictableActionArguments: true,
@@ -206,16 +204,12 @@ export const tasksMachine = createMachine(
     actions: {
       applyOfflineChanges: assign({
         tasks(context) {
-          return context.transformTasks(
-            context.changelog.reduce(applyChange, context.tasks)
-          );
+          return context.changelog.reduce(applyChange, context.tasks);
         },
       }),
       applyLastChange: assign({
         tasks(context) {
-          return context.transformTasks(
-            applyChange(context.tasks, context.changelog.at(-1)!)
-          );
+          return applyChange(context.tasks, context.changelog.at(-1)!);
         },
       }),
       pushToChangelog: assign({
@@ -337,15 +331,11 @@ function getOfflineChangelog(): TaskChange[] {
   return JSON.parse(changelogAsJSON) as TaskChange[];
 }
 
-export function useTasksMachine(
-  tasks: Task[],
-  transformTasks: (tasks: Task[]) => Task[]
-) {
+export function useTasksMachine(tasks: Task[]) {
   const [state, send, ...rest] = useMachine(tasksMachine, {
     context: {
       tasks,
       changelog: getOfflineChangelog(),
-      transformTasks,
     },
   });
 
