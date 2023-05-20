@@ -4,7 +4,7 @@ import TaskLi from "@/Components/TaskLi";
 import For from "@/Components/For";
 import { useTasksMachine } from "@/tasks-machine";
 import {
-  CompleteTaskLiEvent,
+  ToggleTaskLiEvent,
   DeleteTaskLiEvent,
   EditTaskLiEvent,
   PageProps,
@@ -22,7 +22,7 @@ type TaskPageProps = PageProps<{
   tasks: Task[];
 }>;
 
-export default function UpcomingPage({ auth, tasks }: TaskPageProps) {
+export default function TasksPage({ auth, tasks }: TaskPageProps) {
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
   const [state, send] = useTasksMachine(tasks);
@@ -50,8 +50,12 @@ export default function UpcomingPage({ auth, tasks }: TaskPageProps) {
     form.reset();
   });
 
-  const handleCompleteTask = (e: CompleteTaskLiEvent) => {
-    send({ type: "change", changeType: "complete", taskId: e.taskId });
+  const handleToggleTask = (e: ToggleTaskLiEvent) => {
+    send({
+      type: "change",
+      changeType: e.completed ? "complete" : "uncomplete",
+      taskId: e.taskId,
+    });
   };
 
   const handleEditTask = (e: EditTaskLiEvent) => {
@@ -155,7 +159,7 @@ export default function UpcomingPage({ auth, tasks }: TaskPageProps) {
           <TaskLi
             task={task}
             key={task.id}
-            onComplete={handleCompleteTask}
+            onToggle={handleToggleTask}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
           />
@@ -185,7 +189,7 @@ export default function UpcomingPage({ auth, tasks }: TaskPageProps) {
             <TaskLi
               task={task}
               key={task.id}
-              onComplete={handleCompleteTask}
+              onToggle={handleToggleTask}
               onDelete={handleDeleteTask}
             />
           )}

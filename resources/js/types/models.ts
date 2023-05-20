@@ -24,10 +24,7 @@ export interface Task extends Model {
   completed_at: string | null;
 }
 
-export type TaskChange =
-  | CreateTaskChange
-  | EditTaskChange
-  | NonCreateTaskChange;
+export type TaskChange = CreateTaskChange | EditTaskChange | OtherTaskChange;
 
 interface CreateTaskChange extends BaseTaskChange {
   type: "create";
@@ -40,8 +37,8 @@ interface EditTaskChange extends BaseTaskChange {
   task_name: string;
 }
 
-interface NonCreateTaskChange extends BaseTaskChange {
-  type: "complete" | "delete";
+interface OtherTaskChange extends BaseTaskChange {
+  type: "complete" | "uncomplete" | "delete";
 }
 
 interface BaseTaskChange extends Model {

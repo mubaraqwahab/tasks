@@ -1,8 +1,4 @@
-import {
-  CompleteTaskLiEvent,
-  EditTaskLiEvent,
-  DeleteTaskLiEvent,
-} from "@/types";
+import { ToggleTaskLiEvent, EditTaskLiEvent, DeleteTaskLiEvent } from "@/types";
 import { Task } from "@/types/models";
 import MyForm from "@/Components/MyForm";
 import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
@@ -10,19 +6,19 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as Form from "@radix-ui/react-form";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
 
 type TaskLiProps = {
   task: Task;
-  onComplete?: (e: CompleteTaskLiEvent) => void;
+  onToggle?: (e: ToggleTaskLiEvent) => void;
   onEdit?: (e: EditTaskLiEvent) => void;
   onDelete?: (e: DeleteTaskLiEvent) => void;
 };
 
 export default function TaskLi({
   task,
-  onComplete,
+  onToggle,
   onEdit,
   onDelete,
 }: TaskLiProps) {
@@ -31,26 +27,27 @@ export default function TaskLi({
 
   const taskNameElementId = `task-${task.id}-name`;
 
-  const handleComplete = p(() => {
-    onComplete?.({ type: "complete", taskId: task.id });
+  const handleToggle = p((e) => {
+    onToggle?.({
+      type: "toggle",
+      taskId: task.id,
+      completed: !task.completed_at,
+    });
   });
 
   const handleEdit = p((e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
+    const taskNameValue = formData.get("taskName") as string;
     onEdit?.({
       type: "edit",
       taskId: task.id,
-      taskName: (formData.get("taskName") as string).trim(),
+      taskName: taskNameValue.trim(),
     });
-    // setIsEditDialogOpen(false);
-    // setIsDropdownMenuOpen(false);
   });
 
   const handleDelete = p(() => {
     onDelete?.({ type: "delete", taskId: task.id });
-    // setIsDeleteDialogOpen(false);
-    // setIsDropdownMenuOpen(false);
   });
 
   return (
@@ -58,7 +55,7 @@ export default function TaskLi({
       <MyForm
         action={route("tasks.update", task.id)}
         method="PATCH"
-        onSubmit={handleComplete}
+        onSubmit={handleToggle}
       >
         <button
           type="submit"
@@ -74,7 +71,13 @@ export default function TaskLi({
         </button>
       </MyForm>
 
-      <p id={taskNameElementId} className="flex-grow pl-3 pr-3">
+      <p
+        id={taskNameElementId}
+        className={clsx(
+          "flex-grow pl-3 pr-3",
+          task.completed_at && "line-through"
+        )}
+      >
         {task.name}
       </p>
 

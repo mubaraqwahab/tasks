@@ -311,6 +311,10 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
         ? { ...task, completed_at: change.created_at }
         : task
     );
+  } else if (change.type === "uncomplete") {
+    return tasks.map((task) =>
+      task.id === change.task_id ? { ...task, completed_at: null } : task
+    );
   } else if (change.type === "edit") {
     return tasks.map((task) =>
       task.id === change.task_id ? { ...task, name: change.task_name } : task
@@ -318,12 +322,14 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
   } else if (change.type === "delete") {
     return tasks.filter((task) => task.id !== change.task_id);
   } else {
-    // TODO: is this the best you can do?
-    throw new Error();
+    // This should never happen in prod right?
+    throw new Error(`Unrecognized change type: ${change.type}`);
   }
 }
 
 function getOfflineChangelog(): TaskChange[] {
+  if (typeof window === "undefined") return [];
+
   const changelogAsJSON = localStorage.getItem("taskChangelog") || "[]";
   // Note: if the persisted changelog isn't an array of task changes,
   // or not an array at all, then someone must have tampered with it.
@@ -339,10 +345,12 @@ export function useTasksMachine(tasks: Task[]) {
     },
   });
 
-  localStorage.setItem(
-    "taskChangelog",
-    JSON.stringify(state.context.changelog)
-  );
+  if (typeof window !== "undefined") {
+    localStorage.setItem(
+      "taskChangelog",
+      JSON.stringify(state.context.changelog)
+    );
+  }
 
   console.log("Offline changelog", getOfflineChangelog());
 
@@ -362,4 +370,9 @@ export function useTasksMachine(tasks: Task[]) {
   return [state, send, ...rest] as ReturnType<
     typeof useMachine<typeof tasksMachine>
   >;
+}
+
+if (import.meta.env.DEV) {
+  // @ts-ignore
+  window.changelog = getOfflineChangelog;
 }

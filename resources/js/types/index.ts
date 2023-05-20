@@ -5,8 +5,9 @@ interface TaskLiEvent {
   taskId: string;
 }
 
-export interface CompleteTaskLiEvent extends TaskLiEvent {
-  type: "complete";
+export interface ToggleTaskLiEvent extends TaskLiEvent {
+  type: "toggle";
+  completed: boolean;
 }
 
 export interface EditTaskLiEvent extends TaskLiEvent {
