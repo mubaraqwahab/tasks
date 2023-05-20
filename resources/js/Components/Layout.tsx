@@ -2,7 +2,7 @@ import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head, Link } from "@inertiajs/react";
 import { PropsWithChildren, useId, useState } from "react";
-import Form from "@/Components/Form";
+import MyForm from "@/Components/MyForm";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
@@ -75,12 +75,12 @@ export default function Layout({ auth, title, children }: LayoutProps) {
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
-          <Form
+          <MyForm
             method="POST"
             action={route("logout")}
             id={logOutFormId}
             className="sr-only"
-          ></Form>
+          ></MyForm>
         </div>
       </header>
       <main>

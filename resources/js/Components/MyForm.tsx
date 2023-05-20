@@ -1,7 +1,7 @@
 import { AuthContext } from "@/context";
-import { PropsWithChildren, useContext } from "react";
+import { PropsWithChildren, forwardRef, useContext } from "react";
 
-type FormProps = React.FormHTMLAttributes<HTMLFormElement> &
+type MyFormProps = React.FormHTMLAttributes<HTMLFormElement> &
   PropsWithChildren<{
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   }>;
@@ -9,11 +9,14 @@ type FormProps = React.FormHTMLAttributes<HTMLFormElement> &
 const htmlMethods = ["GET", "POST"];
 
 /** A form component with method spoofing and CSRF input */
-export default function Form({ method = "GET", children, ...rest }: FormProps) {
+const MyForm = forwardRef<HTMLFormElement, MyFormProps>(function MyForm(
+  { method = "GET", children, ...rest },
+  ref
+) {
   const { csrfToken } = useContext(AuthContext);
   return (
     <>
-      <form method={method === "GET" ? method : "POST"} {...rest}>
+      <form ref={ref} method={method === "GET" ? method : "POST"} {...rest}>
         {method !== "GET" && (
           <input type="hidden" name="_token" value={csrfToken} />
         )}
@@ -24,4 +27,6 @@ export default function Form({ method = "GET", children, ...rest }: FormProps) {
       </form>
     </>
   );
-}
+});
+
+export default MyForm;

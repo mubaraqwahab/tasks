@@ -1,4 +1,4 @@
-import Form from "@/Components/Form";
+import MyForm from "@/Components/MyForm";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import For from "@/Components/For";
@@ -102,7 +102,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
 
       {/* <div className="mb-3">Errors? { JSON.stringify($page.props.errors) }</div> */}
 
-      <Form
+      <MyForm
         method="POST"
         action={route("tasks.store")}
         className="mb-6 relative"
@@ -134,7 +134,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         >
           <PlusIcon className="w-5 h-5" />
         </button>
-      </Form>
+      </MyForm>
 
       <For
         each={upcomingTasks}
