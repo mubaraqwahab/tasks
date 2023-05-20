@@ -79,7 +79,7 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
   }
 
   return (
-    <Layout auth={auth} title="Upcoming tasks">
+    <Layout auth={auth} title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
 
       {/* Status bar */}
