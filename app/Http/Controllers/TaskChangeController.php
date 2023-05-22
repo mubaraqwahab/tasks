@@ -99,26 +99,26 @@ class TaskChangeController extends Controller
                 break;
 
             case "complete":
-                $task = Task::findOrFail($taskId);
+                $task = Task::query()->findOrFail($taskId);
                 // TODO: validate that completed_at > created_at?
                 $task->completed_at = $change["created_at"];
                 $task->save();
                 break;
 
             case "uncomplete":
-                $task = Task::findOrFail($taskId);
+                $task = Task::query()->findOrFail($taskId);
                 $task->completed_at = null;
                 $task->save();
                 break;
 
             case "edit":
-                $task = Task::findOrFail($taskId);
+                $task = Task::query()->findOrFail($taskId);
                 $task->name = $change["task_name"];
                 $task->save();
                 break;
 
             case "delete":
-                $task = Task::findOrFail($taskId);
+                $task = Task::query()->findOrFail($taskId);
                 $task->delete();
                 break;
 

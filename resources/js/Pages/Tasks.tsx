@@ -8,6 +8,7 @@ import {
   DeleteTaskLiEvent,
   EditTaskLiEvent,
   PageProps,
+  PaginatedCollection,
 } from "@/types";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
@@ -18,15 +19,25 @@ import * as Form from "@radix-ui/react-form";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
 
-type TaskPageProps = PageProps<{
-  tasks: Task[];
+export type TaskPageProps = PageProps<{
+  upcomingTasks: PaginatedCollection<Task>;
+  completedTasks: PaginatedCollection<Task>;
 }>;
 
-export default function TasksPage({ auth, tasks }: TaskPageProps) {
+export default function TasksPage({
+  auth,
+  upcomingTasks: paginatedUpcomingTasks,
+  completedTasks: paginatedCompletedTasks,
+}: TaskPageProps) {
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
-  const [state, send] = useTasksMachine(tasks);
+  const [state, send] = useTasksMachine(
+    paginatedUpcomingTasks,
+    paginatedCompletedTasks
+  );
 
+  // Is orderby really needed? The data comes already sorted from the server.
+  // And you can insert new tasks intelligently to maintain the sort order.
   const upcomingTasks = orderBy(
     state.context.tasks.filter((task) => task.completed_at === null),
     ["created_at"],
@@ -71,11 +82,11 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
-  let error = null;
+  let syncError = null;
   if (state.matches("tasks.someFailedToSync")) {
-    error = state.context.changelog.filter((change) => !!change.lastError);
-  } else if (state.matches("tasks.normal.temporaryError.unknownError")) {
-    error = state.context.error;
+    syncError = state.context.changelog.filter((change) => !!change.lastError);
+  } else if (state.matches("tasks.normal.passiveError.unknownError")) {
+    syncError = state.context.syncError;
   }
 
   return (
@@ -92,13 +103,17 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
           &middot;
           <span>
             {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
+          </span>{" "}
+          &middot;
+          <span>
+            {state.toStrings().findLast((s) => s.startsWith("pagination"))!}
           </span>
         </p>
-        {(error as any) && (
+        {syncError && (
           <details>
             <summary>Error:</summary>
             <pre className="max-h-40 overflow-y-scroll mt-1 border p-2">
-              <code>{JSON.stringify(error, null, 2)}</code>
+              <code>{JSON.stringify(syncError, null, 2)}</code>
             </pre>
             {state.matches("tasks.someFailedToSync") && (
               <button
@@ -167,6 +182,15 @@ export default function TasksPage({ auth, tasks }: TaskPageProps) {
         fallback={<p>No tasks?</p>}
         className="mb-8"
       />
+
+      {!state.matches("pagination.allLoaded") && (
+        <button
+          type="button"
+          onClick={() => send({ type: "loadMore", which: "upcoming" })}
+        >
+          {state.matches("pagination.loadingMore") ? "Loading..." : "Show more"}
+        </button>
+      )}
 
       <details
         onToggle={(e) => {

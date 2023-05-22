@@ -3,6 +3,9 @@ import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
 import { useMachine } from "@xstate/react";
 import { useEffect } from "react";
+import { usePage } from "@inertiajs/react";
+import { PaginatedCollection } from "./types";
+import type { TaskPageProps } from "./Pages/Tasks";
 
 type SyncErrorStatus = {
   type: "error";
@@ -30,14 +33,25 @@ export const tasksMachine = createMachine(
               },
             },
           },
+          initializing: {
+            description:
+              "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
+            entry: "applyOfflineChanges",
+            always: {
+              target: "normal",
+            },
+          },
+          reloading: {
+            entry: "reload",
+            type: "final",
+          },
           normal: {
-            initial: "idle",
+            initial: "allSynced",
             states: {
-              idle: {
+              allSynced: {
                 always: {
                   target: "syncing",
                   cond: "changelogIsNotEmpty",
-                  in: "#taskManager.network.online",
                 },
                 on: {
                   online: {},
@@ -53,17 +67,17 @@ export const tasksMachine = createMachine(
                   ],
                   onError: [
                     {
-                      target: "temporaryError",
+                      target: "passiveError",
                       cond: "isNetworkError",
                     },
                     {
                       target:
-                        "#taskManager.tasks.normal.temporaryError.serverError",
+                        "#taskManager.tasks.normal.passiveError.serverError",
                       cond: "isServerError",
                     },
                     {
                       target:
-                        "#taskManager.tasks.normal.temporaryError.unknownError",
+                        "#taskManager.tasks.normal.passiveError.unknownError",
                     },
                   ],
                 },
@@ -80,16 +94,7 @@ export const tasksMachine = createMachine(
                   },
                 ],
               },
-              allSynced: {
-                after: {
-                  "3000": {
-                    target: "#taskManager.tasks.normal.idle",
-                    actions: [],
-                    internal: false,
-                  },
-                },
-              },
-              temporaryError: {
+              passiveError: {
                 after: {
                   "10000": {
                     target: "#taskManager.tasks.normal.syncing",
@@ -104,7 +109,7 @@ export const tasksMachine = createMachine(
                   serverError: {},
                   unknownError: {
                     entry: "setError",
-                    exit: "resetError",
+                    exit: "clearError",
                   },
                 },
                 on: {
@@ -119,23 +124,9 @@ export const tasksMachine = createMachine(
             },
             on: {
               change: {
-                target: "normal",
                 actions: ["pushToChangelog", "applyLastChange"],
-                internal: false,
               },
             },
-          },
-          initializing: {
-            description:
-              "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
-            entry: "applyOfflineChanges",
-            always: {
-              target: "normal",
-            },
-          },
-          reloading: {
-            entry: "reload",
-            type: "final",
           },
         },
       },
@@ -158,6 +149,48 @@ export const tasksMachine = createMachine(
           },
         },
       },
+      pagination: {
+        initial: "indeterminate",
+        states: {
+          indeterminate: {
+            always: [
+              {
+                target: "notAllLoaded",
+                cond: "moreToLoad",
+              },
+              {
+                target: "allLoaded",
+              },
+            ],
+          },
+          notAllLoaded: {
+            on: {
+              loadMore: {
+                target: "loadingMore",
+              },
+            },
+          },
+          allLoaded: {
+            type: "final",
+          },
+          loadingMore: {
+            invoke: {
+              src: "loadMoreTasks",
+              onDone: [
+                {
+                  target: "indeterminate",
+                  actions: ["pushLoadedTasks", "setNextPageURL"],
+                },
+              ],
+              onError: [
+                {
+                  target: "notAllLoaded",
+                },
+              ],
+            },
+          },
+        },
+      },
     },
     type: "parallel",
     schema: {
@@ -165,7 +198,9 @@ export const tasksMachine = createMachine(
         tasks: Task[];
         changelog: TaskChange[];
         autoRetryCount: number;
-        error: unknown;
+        syncError: AxiosError | null;
+        nextUpcomingPageURL: string | null;
+        nextCompletedPageURL: string | null;
       },
       events: {} as
         | { type: "change"; changeType: "create"; taskName: string }
@@ -183,10 +218,14 @@ export const tasksMachine = createMachine(
         | { type: "discardFailed" }
         | { type: "retrySync" }
         | { type: "online" }
-        | { type: "offline" },
+        | { type: "offline" }
+        | { type: "loadMore"; which: "upcoming" | "completed" },
       services: {} as {
         syncChangelog: {
           data: SyncResponseData;
+        };
+        loadMoreTasks: {
+          data: PaginatedCollection<Task>;
         };
       },
     },
@@ -194,7 +233,9 @@ export const tasksMachine = createMachine(
       tasks: [],
       changelog: [],
       autoRetryCount: 0,
-      error: null,
+      syncError: null,
+      nextUpcomingPageURL: null,
+      nextCompletedPageURL: null,
     },
     tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
     predictableActionArguments: true,
@@ -263,11 +304,21 @@ export const tasksMachine = createMachine(
         },
       }),
       setError: assign({
-        error(_, event) {
-          return event.data;
+        syncError(_, event) {
+          return event.data as AxiosError;
         },
       }),
-      resetError: assign({ error: null }),
+      clearError: assign({ syncError: null }),
+      pushLoadedTasks: assign({
+        tasks(context, event) {
+          return context.tasks.concat(event.data.data);
+        },
+      }),
+      setNextPageURL: assign({
+        nextUpcomingPageURL(_, event) {
+          return event.data.next_page_url;
+        },
+      }),
     },
     guards: {
       changelogIsNotEmpty: (context) => !!context.changelog.length,
@@ -280,6 +331,7 @@ export const tasksMachine = createMachine(
         (event.data as AxiosError).code === "ERR_BAD_RESPONSE"
       ),
       maxAutoRetryCountNotReached: (context) => context.autoRetryCount < 2,
+      moreToLoad: (context) => !!context.nextUpcomingPageURL,
     },
     services: {
       async syncChangelog(context) {
@@ -288,6 +340,25 @@ export const tasksMachine = createMachine(
           context.changelog
         );
         return response.data;
+      },
+      async loadMoreTasks(context) {
+        const page = getInertiaPage();
+        // Simulate Inertia's router.get (without actually navigating)
+        const response = await axios.get(context.nextUpcomingPageURL!, {
+          headers: {
+            "X-Inertia": true,
+            "X-Inertia-Version": page.version,
+            "X-Inertia-Partial-Data": "upcomingTasks",
+            "X-Inertia-Partial-Component": "Tasks",
+          },
+        });
+
+        console.log({ page, response });
+        const pageProps = response.data.props as Pick<
+          TaskPageProps,
+          "upcomingTasks"
+        >;
+        return pageProps.upcomingTasks;
       },
     },
   }
@@ -337,11 +408,20 @@ function getOfflineChangelog(): TaskChange[] {
   return JSON.parse(changelogAsJSON) as TaskChange[];
 }
 
-export function useTasksMachine(tasks: Task[]) {
+function getInertiaPage(): ReturnType<typeof usePage> {
+  return JSON.parse(document.getElementById("app")!.dataset.page!);
+}
+
+export function useTasksMachine(
+  paginatedUpcomingTasks: PaginatedCollection<Task>,
+  paginatedCompletedTasks: PaginatedCollection<Task>
+) {
   const [state, send, ...rest] = useMachine(tasksMachine, {
     context: {
-      tasks,
+      tasks: paginatedUpcomingTasks.data.concat(paginatedCompletedTasks.data),
       changelog: getOfflineChangelog(),
+      nextUpcomingPageURL: paginatedUpcomingTasks.next_page_url,
+      nextCompletedPageURL: paginatedCompletedTasks.next_page_url,
     },
   });
 
@@ -374,5 +454,7 @@ export function useTasksMachine(tasks: Task[]) {
 
 if (import.meta.env.DEV) {
   // @ts-ignore
-  window.changelog = getOfflineChangelog;
+  window.getOfflineChangelog = getOfflineChangelog;
+  // @ts-ignore
+  window.getInertiaPage = getInertiaPage;
 }

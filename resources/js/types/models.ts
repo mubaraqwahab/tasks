@@ -19,7 +19,6 @@ export interface Task extends Model {
   id: string;
   name: string;
   // user_id: User["id"];
-  // user: User;
   edited_at: string | null;
   completed_at: string | null;
 }

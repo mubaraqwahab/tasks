@@ -15,21 +15,27 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $completedTasksQuery = Task::with("user")
-            ->whereNotNull("completed_at")
-            ->latest("completed_at");
+        $userTasks = fn() => $request->user()->tasks();
 
-        $tasks = Task::with("user")
+        $upcomingTasks = fn() => $userTasks()
             ->whereNull("completed_at")
             ->latest()
-            ->union($completedTasksQuery)
-            ->get();
+            ->cursorPaginate(
+                // Show 20 initially, then 10 subsequently
+                perPage: $request->query("upcomingCursor") ? 10 : 20,
+                cursorName: "upcomingCursor",
+            );
 
-        // TODO: you may need to split the two tasks when you start paginating
+        $completedTasks = fn() => $userTasks()
+            ->whereNotNull("completed_at")
+            ->latest("completed_at")
+            ->cursorPaginate(perPage: 5, cursorName: "completedCursor");
+
         return Inertia::render("Tasks", [
-            "tasks" => $tasks,
+            "upcomingTasks" => $upcomingTasks,
+            "completedTasks" => $completedTasks,
         ]);
     }
 

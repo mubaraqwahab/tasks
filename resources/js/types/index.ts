@@ -27,3 +27,9 @@ export type PageProps<
     csrfToken: string;
   };
 };
+
+export interface PaginatedCollection<T> {
+  data: T[];
+  next_page_url: string | null;
+  // There other props, but I don't need them
+}
