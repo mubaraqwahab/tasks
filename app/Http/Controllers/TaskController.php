@@ -23,8 +23,8 @@ class TaskController extends Controller
             ->whereNull("completed_at")
             ->latest()
             ->cursorPaginate(
-                // Show 20 initially, then 10 subsequently
-                perPage: $request->query("upcomingCursor") ? 10 : 20,
+                // Show 50 initially, then 20 subsequently
+                perPage: $request->query("upcomingCursor") ? 20 : 50,
                 cursorName: "upcomingCursor",
             );
 
