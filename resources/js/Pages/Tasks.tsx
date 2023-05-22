@@ -95,7 +95,7 @@ export default function TasksPage({
 
       {/* Status bar */}
       <div className="mb-5">
-        <p className="flex gap-x-1.5 mb-1.5">
+        <p className="flex gap-x-1.5 flex-wrap mb-1.5">
           Status:
           <span>
             {state.toStrings().findLast((s) => s.startsWith("network"))!}
