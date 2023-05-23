@@ -2,7 +2,7 @@ import MyForm from "@/Components/MyForm";
 import Layout from "@/Components/Layout";
 import TaskLi from "@/Components/TaskLi";
 import For from "@/Components/For";
-import { useTasksMachine } from "@/tasks-machine";
+import { useTasksMachine } from "@/machines/task-manager";
 import {
   ToggleTaskLiEvent,
   DeleteTaskLiEvent,
@@ -18,23 +18,23 @@ import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
+import { ActorRefFrom } from "xstate";
+import { useActor } from "@xstate/react";
+import { paginatorMachine } from "@/machines/task-paginator";
 
 export type TaskPageProps = PageProps<{
-  upcomingTasks: Paginator<Task>;
-  completedTasks: Paginator<Task>;
+  upcomingPaginator: Paginator<Task>;
+  completedPaginator: Paginator<Task>;
 }>;
 
 export default function TasksPage({
   auth,
-  upcomingTasks: paginatedUpcomingTasks,
-  completedTasks: paginatedCompletedTasks,
+  upcomingPaginator,
+  completedPaginator,
 }: TaskPageProps) {
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
-  const [state, send] = useTasksMachine(
-    paginatedUpcomingTasks,
-    paginatedCompletedTasks
-  );
+  const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
 
   // Is orderby really needed? The data comes already sorted from the server.
   // And you can insert new tasks intelligently to maintain the sort order.
@@ -85,7 +85,7 @@ export default function TasksPage({
   let syncError = null;
   if (state.matches("tasks.someFailedToSync")) {
     syncError = state.context.changelog.filter((change) => !!change.lastError);
-  } else if (state.matches("tasks.normal.passiveError.unknownError")) {
+  } else if (state.matches("tasks.normal.passiveError.unknown")) {
     syncError = state.context.syncError;
   }
 
@@ -103,10 +103,6 @@ export default function TasksPage({
           &middot;
           <span>
             {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
-          </span>{" "}
-          &middot;
-          <span>
-            {state.toStrings().findLast((s) => s.startsWith("pagination"))!}
           </span>
         </p>
         {syncError && (
@@ -168,35 +164,31 @@ export default function TasksPage({
         </MyForm>
       </Form.Root>
 
-      <For
-        each={upcomingTasks}
-        render={(task) => (
-          <TaskLi
-            task={task}
-            key={task.id}
-            onToggle={handleToggleTask}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-          />
-        )}
-        fallback={<p>No tasks?</p>}
-        className="mb-8"
-      />
+      <div className="mb-8">
+        <For
+          each={upcomingTasks}
+          render={(task) => (
+            <TaskLi
+              task={task}
+              key={task.id}
+              onToggle={handleToggleTask}
+              onEdit={handleEditTask}
+              onDelete={handleDeleteTask}
+            />
+          )}
+          fallback={<p>No tasks?</p>}
+          className="mb-5"
+        />
 
-      {!state.matches("pagination.allLoaded") && (
-        <button
-          type="button"
-          onClick={() => send({ type: "loadMore", which: "upcoming" })}
-        >
-          {state.matches("pagination.loadingMore") ? "Loading..." : "Show more"}
-        </button>
-      )}
+        <PaginationButton actorRef={state.context.upcomingPaginatorRef!} />
+      </div>
 
       <details
         onToggle={(e) => {
           const details = e.target as HTMLDetailsElement;
           setIsCompletedTasksOpen(details.open);
         }}
+        className="mb-8"
       >
         <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
           <ChevronDownIcon
@@ -207,6 +199,7 @@ export default function TasksPage({
           />
           Completed tasks
         </summary>
+
         <For
           each={completedTasks}
           render={(task) => (
@@ -218,9 +211,40 @@ export default function TasksPage({
             />
           )}
           fallback={<p>No tasks?</p>}
-          className="mb-8"
+          className="mb-5"
         />
+
+        <PaginationButton actorRef={state.context.completedPaginatorRef!} />
       </details>
     </Layout>
+  );
+}
+
+// TODO: Maybe make a <PaginatedTaskList /> instead?
+
+function PaginationButton({
+  actorRef,
+}: {
+  actorRef: ActorRefFrom<typeof paginatorMachine>;
+}) {
+  const [state, send] = useActor(actorRef);
+  return (
+    <>
+      {state.matches("allLoaded") ? null : (
+        <button
+          type="button"
+          className="border px-3 py-1 rounded-md text-sm"
+          onClick={() => {
+            send({ type: "loadMore" });
+          }}
+        >
+          {state.matches("loadingMore")
+            ? "Loading..."
+            : state.matches("notAllLoaded.failedToLoad")
+            ? "Failed to load. Retry"
+            : "Show more"}
+        </button>
+      )}
+    </>
   );
 }

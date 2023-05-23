@@ -19,7 +19,7 @@ class TaskController extends Controller
     {
         $userTasks = fn() => $request->user()->tasks();
 
-        $upcomingTasks = fn() => $userTasks()
+        $upcomingPaginator = fn() => $userTasks()
             ->whereNull("completed_at")
             ->latest()
             ->cursorPaginate(
@@ -28,14 +28,14 @@ class TaskController extends Controller
                 cursorName: "upcomingCursor",
             );
 
-        $completedTasks = fn() => $userTasks()
+        $completedPaginator = fn() => $userTasks()
             ->whereNotNull("completed_at")
             ->latest("completed_at")
-            ->cursorPaginate(perPage: 5, cursorName: "completedCursor");
+            ->cursorPaginate(perPage: 10, cursorName: "completedCursor");
 
         return Inertia::render("Tasks", [
-            "upcomingTasks" => $upcomingTasks,
-            "completedTasks" => $completedTasks,
+            "upcomingPaginator" => $upcomingPaginator,
+            "completedPaginator" => $completedPaginator,
         ]);
     }
 
