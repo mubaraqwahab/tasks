@@ -16,6 +16,90 @@ type SyncResponseData = {
   syncStatus: Record<string, { type: "ok" | "duplicate" } | SyncErrorStatus>;
 };
 
+const paginatorMachine = createMachine(
+  {
+    id: "paginator",
+    initial: "indeterminate",
+    states: {
+      indeterminate: {
+        always: [
+          {
+            target: "notAllLoaded",
+            cond: "moreToLoad",
+          },
+          {
+            target: "allLoaded",
+          },
+        ],
+      },
+      notAllLoaded: {
+        initial: "normal",
+        states: {
+          normal: {},
+          failedToLoad: {},
+        },
+        on: {
+          loadMore: {
+            target: "loadingMore",
+          },
+        },
+      },
+      allLoaded: {
+        type: "final",
+      },
+      loadingMore: {
+        invoke: {
+          src: "loadMore",
+          onDone: [
+            {
+              target: "indeterminate",
+              actions: ["sendLoadedData", "setNextPageURL"],
+            },
+          ],
+          onError: [
+            {
+              target: "#paginator.notAllLoaded.failedToLoad",
+            },
+          ],
+        },
+      },
+    },
+    schema: {
+      context: {} as { nextPageURL: string | null },
+      events: {} as { type: "loadMore" },
+      services: {
+        loadMore: {
+          data: {
+            data: [],
+            next_page_url: string | null,
+          },
+        },
+      },
+    },
+    context: {
+      nextPageURL: null,
+    },
+    predictableActionArguments: true,
+    preserveActionOrder: true,
+    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
+  },
+  {
+    actions: {
+      setNextPageURL: assign({
+        nextPageURL(_, event) {
+          return event.data.next_page_url;
+        },
+      }),
+    },
+    guards: {
+      moreToLoad: (context) => !!context.nextPageURL,
+    },
+    services: {
+      loadMoreTasks: {},
+    },
+  }
+);
+
 // Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
 export const tasksMachine = createMachine(
   {
@@ -237,7 +321,7 @@ export const tasksMachine = createMachine(
       nextUpcomingPageURL: null,
       nextCompletedPageURL: null,
     },
-    tsTypes: {} as import("./tasks-machine.typegen").Typegen0,
+    tsTypes: {} as import("./tasks-machine.typegen").Typegen1,
     predictableActionArguments: true,
     preserveActionOrder: true,
   },
@@ -314,11 +398,6 @@ export const tasksMachine = createMachine(
           return context.tasks.concat(event.data.data);
         },
       }),
-      setNextPageURL: assign({
-        nextUpcomingPageURL(_, event) {
-          return event.data.next_page_url;
-        },
-      }),
     },
     guards: {
       changelogIsNotEmpty: (context) => !!context.changelog.length,
@@ -331,7 +410,6 @@ export const tasksMachine = createMachine(
         (event.data as AxiosError).code === "ERR_BAD_RESPONSE"
       ),
       maxAutoRetryCountNotReached: (context) => context.autoRetryCount < 2,
-      moreToLoad: (context) => !!context.nextUpcomingPageURL,
     },
     services: {
       async syncChangelog(context) {
