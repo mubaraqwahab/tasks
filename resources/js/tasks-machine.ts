@@ -1,10 +1,10 @@
-import { createMachine, assign } from "xstate";
+import { createMachine, assign, ActorRefFrom, spawn } from "xstate";
 import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
 import { useMachine } from "@xstate/react";
 import { useEffect } from "react";
 import { usePage } from "@inertiajs/react";
-import { PaginatedCollection } from "./types";
+import { Paginator } from "./types";
 import type { TaskPageProps } from "./Pages/Tasks";
 
 type SyncErrorStatus = {
@@ -16,6 +16,7 @@ type SyncResponseData = {
   syncStatus: Record<string, { type: "ok" | "duplicate" } | SyncErrorStatus>;
 };
 
+// TODO: rename as taskPaginator and sync with Studio
 const paginatorMachine = createMachine(
   {
     id: "paginator",
@@ -49,7 +50,7 @@ const paginatorMachine = createMachine(
       },
       loadingMore: {
         invoke: {
-          src: "loadMore",
+          src: "loadMoreTasks",
           onDone: [
             {
               target: "indeterminate",
@@ -65,19 +66,21 @@ const paginatorMachine = createMachine(
       },
     },
     schema: {
-      context: {} as { nextPageURL: string | null },
+      context: {} as { nextPageURL: string | null; cursorName: string },
       events: {} as { type: "loadMore" },
-      services: {
-        loadMore: {
+      services: {} as {
+        loadMoreTasks: {
           data: {
-            data: [],
-            next_page_url: string | null,
-          },
-        },
+            data: Task[];
+            next_page_url: string | null;
+          };
+        };
       },
     },
     context: {
       nextPageURL: null,
+      // Just to please TS.
+      cursorName: "cursor",
     },
     predictableActionArguments: true,
     preserveActionOrder: true,
@@ -95,7 +98,25 @@ const paginatorMachine = createMachine(
       moreToLoad: (context) => !!context.nextPageURL,
     },
     services: {
-      loadMoreTasks: {},
+      async loadMoreTasks(context) {
+        const page = getInertiaPage();
+        // Simulate Inertia's router.get (without actually navigating)
+        const response = await axios.get(context.nextPageURL!, {
+          headers: {
+            "X-Inertia": true,
+            "X-Inertia-Version": page.version,
+            "X-Inertia-Partial-Data": context.cursorName,
+            "X-Inertia-Partial-Component": "Tasks",
+          },
+        });
+
+        console.log({ page, response });
+        const pageProps = response.data.props as Pick<
+          TaskPageProps,
+          "upcomingTasks"
+        >;
+        return pageProps.upcomingTasks;
+      },
     },
   }
 );
@@ -283,8 +304,8 @@ export const tasksMachine = createMachine(
         changelog: TaskChange[];
         autoRetryCount: number;
         syncError: AxiosError | null;
-        nextUpcomingPageURL: string | null;
-        nextCompletedPageURL: string | null;
+        upcomingTasksPaginator?: ActorRefFrom<typeof paginatorMachine>;
+        completedTasksPaginator?: ActorRefFrom<typeof paginatorMachine>;
       },
       events: {} as
         | { type: "change"; changeType: "create"; taskName: string }
@@ -309,7 +330,7 @@ export const tasksMachine = createMachine(
           data: SyncResponseData;
         };
         loadMoreTasks: {
-          data: PaginatedCollection<Task>;
+          data: Paginator<Task>;
         };
       },
     },
@@ -318,8 +339,6 @@ export const tasksMachine = createMachine(
       changelog: [],
       autoRetryCount: 0,
       syncError: null,
-      nextUpcomingPageURL: null,
-      nextCompletedPageURL: null,
     },
     tsTypes: {} as import("./tasks-machine.typegen").Typegen1,
     predictableActionArguments: true,
@@ -419,25 +438,6 @@ export const tasksMachine = createMachine(
         );
         return response.data;
       },
-      async loadMoreTasks(context) {
-        const page = getInertiaPage();
-        // Simulate Inertia's router.get (without actually navigating)
-        const response = await axios.get(context.nextUpcomingPageURL!, {
-          headers: {
-            "X-Inertia": true,
-            "X-Inertia-Version": page.version,
-            "X-Inertia-Partial-Data": "upcomingTasks",
-            "X-Inertia-Partial-Component": "Tasks",
-          },
-        });
-
-        console.log({ page, response });
-        const pageProps = response.data.props as Pick<
-          TaskPageProps,
-          "upcomingTasks"
-        >;
-        return pageProps.upcomingTasks;
-      },
     },
   }
 );
@@ -491,15 +491,15 @@ function getInertiaPage(): ReturnType<typeof usePage> {
 }
 
 export function useTasksMachine(
-  paginatedUpcomingTasks: PaginatedCollection<Task>,
-  paginatedCompletedTasks: PaginatedCollection<Task>
+  upcomingTasksPaginator: Paginator<Task>,
+  completedTasksPaginator: Paginator<Task>
 ) {
+  // TODO: you might need to pass the next_page_urls to the machine
+  // so that it can in turn pass them to the spawned actors.
   const [state, send, ...rest] = useMachine(tasksMachine, {
     context: {
-      tasks: paginatedUpcomingTasks.data.concat(paginatedCompletedTasks.data),
+      tasks: upcomingTasksPaginator.data.concat(completedTasksPaginator.data),
       changelog: getOfflineChangelog(),
-      nextUpcomingPageURL: paginatedUpcomingTasks.next_page_url,
-      nextCompletedPageURL: paginatedCompletedTasks.next_page_url,
     },
   });
 

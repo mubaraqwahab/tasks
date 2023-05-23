@@ -28,7 +28,7 @@ export type PageProps<
   };
 };
 
-export interface PaginatedCollection<T> {
+export interface Paginator<T> {
   data: T[];
   next_page_url: string | null;
   // There other props, but I don't need them

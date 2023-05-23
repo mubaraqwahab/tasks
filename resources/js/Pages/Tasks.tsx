@@ -8,7 +8,7 @@ import {
   DeleteTaskLiEvent,
   EditTaskLiEvent,
   PageProps,
-  PaginatedCollection,
+  Paginator,
 } from "@/types";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
@@ -20,8 +20,8 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
 
 export type TaskPageProps = PageProps<{
-  upcomingTasks: PaginatedCollection<Task>;
-  completedTasks: PaginatedCollection<Task>;
+  upcomingTasks: Paginator<Task>;
+  completedTasks: Paginator<Task>;
 }>;
 
 export default function TasksPage({
