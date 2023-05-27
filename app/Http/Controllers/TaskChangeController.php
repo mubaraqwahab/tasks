@@ -67,6 +67,7 @@ class TaskChangeController extends Controller
                 ],
                 "task_id" => "required|uuid",
                 "task_name" => [
+                    "max:255",
                     "required_if:type,create",
                     "required_if:type,edit",
                 ],

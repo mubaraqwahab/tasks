@@ -82,11 +82,14 @@ export default function TasksPage({
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
-  let syncError = null;
+  let syncError = "";
   if (state.matches("tasks.someFailedToSync")) {
-    syncError = state.context.changelog.filter((change) => !!change.lastError);
+    syncError = state.context.changelog
+      .filter((change) => !!change.lastError)
+      .map((change) => change.lastError!)
+      .join("\n");
   } else if (state.matches("tasks.normal.passiveError.unknown")) {
-    syncError = state.context.syncError;
+    syncError = state.context.syncError!.message;
   }
 
   return (
@@ -108,8 +111,8 @@ export default function TasksPage({
         {syncError && (
           <details>
             <summary>Error:</summary>
-            <pre className="max-h-40 overflow-y-scroll mt-1 border p-2">
-              <code>{JSON.stringify(syncError, null, 2)}</code>
+            <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-sm">
+              <code>{syncError}</code>
             </pre>
             {state.matches("tasks.someFailedToSync") && (
               <button
