@@ -61,19 +61,20 @@ export default function Layout({ auth, title, children }: LayoutProps) {
 
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}
-                  <button type="submit" form={logOutFormId}>
+                  <Link
+                    href={route("logout")}
+                    method="post"
+                    as="button"
+                    onBefore={() => {
+                      localStorage.removeItem("taskChangelog");
+                    }}
+                  >
                     Log out
-                  </button>
+                  </Link>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
-          <MyForm
-            method="POST"
-            action={route("logout")}
-            id={logOutFormId}
-            className="sr-only"
-          ></MyForm>
         </div>
       </header>
       <main>

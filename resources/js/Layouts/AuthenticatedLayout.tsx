@@ -14,6 +14,11 @@ export default function Authenticated({
   const [showingNavigationDropdown, setShowingNavigationDropdown] =
     useState(false);
 
+  function handleBeforeLogOut() {
+    // TODO: temporary
+    localStorage.removeItem("taskChangelog");
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white border-b border-gray-100">
@@ -71,6 +76,7 @@ export default function Authenticated({
                       href={route("logout")}
                       method="post"
                       as="button"
+                      onBefore={handleBeforeLogOut}
                     >
                       Log Out
                     </Dropdown.Link>
@@ -150,6 +156,7 @@ export default function Authenticated({
                 method="post"
                 href={route("logout")}
                 as="button"
+                onBefore={handleBeforeLogOut}
               >
                 Log Out
               </ResponsiveNavLink>
