@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class TaskChangeController extends Controller
 {
-    public function storeMany(Request $request)
+    public function sync(Request $request)
     {
         $changes = $request->all();
         $syncStatus = [];

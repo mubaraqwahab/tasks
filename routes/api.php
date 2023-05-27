@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware("auth:sanctum")->post("/sync", [
-    TaskChangeController::class,
-    "storeMany",
-]);
+Route::middleware("auth:sanctum")
+    ->post("/sync", [TaskChangeController::class, "sync"])
+    ->name("taskchanges.sync");
