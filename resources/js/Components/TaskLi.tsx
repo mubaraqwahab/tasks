@@ -176,8 +176,11 @@ export default function TaskLi({
                 Are you sure you want to delete this task?
               </Dialog.Title>
               <Dialog.Description>
-                You're about to delete the task: <b>{task.name}</b>. This action
-                is <strong>irreversible</strong>
+                You're about to delete the task:
+                <br />
+                <b>{task.name}</b>
+                <br />
+                This action is <strong>irreversible.</strong>
               </Dialog.Description>
               <MyForm
                 action={route("tasks.destroy", task.id)}

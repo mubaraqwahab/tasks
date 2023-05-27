@@ -94,7 +94,7 @@ export default function TasksPage({
       <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
 
       {/* Status bar */}
-      <div className="mb-5">
+      <div className="mb-5" role="status" aria-live="polite">
         <p className="flex gap-x-1.5 flex-wrap mb-1.5">
           Status:
           <span>
@@ -178,6 +178,9 @@ export default function TasksPage({
           )}
           fallback={<p>No tasks?</p>}
           className="mb-5"
+          role="status"
+          aria-live="polite"
+          aria-relevant="all"
         />
 
         <PaginationButton actorRef={state.context.upcomingPaginatorRef!} />
@@ -212,6 +215,9 @@ export default function TasksPage({
           )}
           fallback={<p>No tasks?</p>}
           className="mb-5"
+          role="status"
+          aria-live="polite"
+          aria-relevant="all"
         />
 
         <PaginationButton actorRef={state.context.completedPaginatorRef!} />
