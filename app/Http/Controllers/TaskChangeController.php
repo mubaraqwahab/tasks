@@ -74,7 +74,9 @@ class TaskChangeController extends Controller
                 "created_at" => "required|date",
             ],
             attributes: [
+                "id" => "change id",
                 "type" => "change type",
+                "created_at" => "change time",
             ],
         )->stopOnFirstFailure();
 

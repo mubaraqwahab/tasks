@@ -1,11 +1,12 @@
 import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head, Link } from "@inertiajs/react";
-import { PropsWithChildren, useId, useState } from "react";
+import { PropsWithChildren, useEffect, useId, useState } from "react";
 import MyForm from "@/Components/MyForm";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
+import axios from "axios";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
@@ -14,9 +15,17 @@ type LayoutProps = PropsWithChildren<{
 
 export default function Layout({ auth, title, children }: LayoutProps) {
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
-  const logOutFormId = useId();
   const dropdownMenuItemClass =
     "px-2 py-1 block w-full text-left rounded-md hover:bg-gray-100";
+
+  useEffect(() => {
+    if (auth.user) {
+      const interval = setInterval(() => {
+        axios.get(route("sanctum.csrf-cookie"));
+      }, 60 * 60 * 1000 /* 1 hr */);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={auth}>

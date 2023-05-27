@@ -86,7 +86,7 @@ export default function TasksPage({
   if (state.matches("tasks.someFailedToSync")) {
     syncError = state.context.changelog
       .filter((change) => !!change.lastError)
-      .map((change) => change.lastError!)
+      .map((change) => `${change.type} failed: ${change.lastError}`)
       .join("\n");
   } else if (state.matches("tasks.normal.passiveError.unknown")) {
     syncError = state.context.syncError!.message;
