@@ -175,12 +175,14 @@ export default function TaskLi({
               <Dialog.Title className="font-semibold text-lg mb-3">
                 Are you sure you want to delete this task?
               </Dialog.Title>
-              <Dialog.Description>
-                You're about to delete the task:
-                <br />
-                <b>{task.name}</b>
-                <br />
-                This action is <strong>irreversible.</strong>
+              <Dialog.Description asChild>
+                <div>
+                  <p>You're about to delete this task:</p>
+                  <p className="my-2.5">
+                    <b>{task.name}</b>
+                  </p>
+                  <p>This action is irreversible.</p>
+                </div>
               </Dialog.Description>
               <MyForm
                 action={route("tasks.destroy", task.id)}
