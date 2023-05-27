@@ -179,7 +179,7 @@ export default function TaskLi({
                 <div>
                   <p>You're about to delete this task:</p>
                   <p className="my-2.5">
-                    <b>{task.name}</b>
+                    <b className="font-semibold">{task.name}</b>
                   </p>
                   <p>This action is irreversible.</p>
                 </div>
