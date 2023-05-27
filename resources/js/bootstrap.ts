@@ -4,10 +4,21 @@
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
 
-import axios from "axios";
-window.axios = axios;
+import axios, { AxiosError } from "axios";
 
-window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+window.axios = axios;
+axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+
+// Credit: https://dev.to/grantholle/better-csrf-refreshing-in-laravel-and-axios-177c
+axios.interceptors.response.use(undefined, async (error: AxiosError) => {
+  if (error.response?.status === 419) {
+    console.log("Refreshing expired session");
+    await axios.get(route("sanctum.csrf-cookie"));
+    console.log("Session refreshed");
+    return axios(error.response.config);
+  }
+  throw error;
+});
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
@@ -32,6 +43,12 @@ window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 // });
 
 let ziggyRoute = window.route;
+
+/**
+ * A convenience wrapper over Ziggy's route() with the absolute arg
+ * set to false by default. This means route() calls will now, by
+ * default, return URLs like '/abc' instead of 'https://example.com/abc'
+ */
 window.route = function route(name, params, absolute = false, config) {
   // @ts-ignore
   return ziggyRoute(name, params, absolute, config);

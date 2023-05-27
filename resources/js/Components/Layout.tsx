@@ -18,15 +18,6 @@ export default function Layout({ auth, title, children }: LayoutProps) {
   const dropdownMenuItemClass =
     "px-2 py-1 block w-full text-left rounded-md hover:bg-gray-100";
 
-  useEffect(() => {
-    if (auth.user) {
-      const interval = setInterval(() => {
-        axios.get(route("sanctum.csrf-cookie"));
-      }, 60 * 60 * 1000 /* 1 hr */);
-      return () => clearInterval(interval);
-    }
-  }, []);
-
   return (
     <AuthContext.Provider value={auth}>
       <Head title={title} />
