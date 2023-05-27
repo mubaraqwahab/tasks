@@ -1,6 +1,6 @@
 import MyForm from "@/Components/MyForm";
 import Layout from "@/Components/Layout";
-import TaskLi from "@/Components/TaskLi";
+import TaskLi, { TaskLiProps } from "@/Components/TaskLi";
 import For from "@/Components/For";
 import { useTasksMachine } from "@/machines/task-manager";
 import {
@@ -17,7 +17,7 @@ import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import { ActorRefFrom } from "xstate";
 import { useActor } from "@xstate/react";
 import { paginatorMachine } from "@/machines/task-paginator";
@@ -32,8 +32,6 @@ export default function TasksPage({
   upcomingPaginator,
   completedPaginator,
 }: TaskPageProps) {
-  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
-
   const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
 
   // Is orderby really needed? The data comes already sorted from the server.
@@ -168,77 +166,76 @@ export default function TasksPage({
       </Form.Root>
 
       <div className="mb-8">
-        <For
-          each={upcomingTasks}
-          render={(task) => (
-            <TaskLi
-              task={task}
-              key={task.id}
-              onToggle={handleToggleTask}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteTask}
-            />
-          )}
-          fallback={<p>No tasks?</p>}
-          className="mb-5"
-          role="status"
-          aria-live="polite"
-          aria-relevant="all"
+        <PaginatedTaskList
+          tasks={upcomingTasks}
+          paginatorRef={state.context.upcomingPaginatorRef!}
+          onToggle={handleToggleTask}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+          fallback={<p>You have no upcoming tasks.</p>}
         />
-
-        <PaginationButton actorRef={state.context.upcomingPaginatorRef!} />
       </div>
 
-      <details
-        onToggle={(e) => {
-          const details = e.target as HTMLDetailsElement;
-          setIsCompletedTasksOpen(details.open);
-        }}
-        className="mb-8"
-      >
+      <details className="mb-8">
         <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
-          <ChevronDownIcon
-            className={clsx(
-              "h-5 w-5 transition-transform duration-200",
-              isCompletedTasksOpen && "rotate-180"
-            )}
-          />
+          <ChevronDownIcon className="h-5 w-5" />
           Completed tasks
         </summary>
 
-        <For
-          each={completedTasks}
-          render={(task) => (
-            <TaskLi
-              task={task}
-              key={task.id}
-              onToggle={handleToggleTask}
-              onDelete={handleDeleteTask}
-            />
-          )}
-          fallback={<p>No tasks?</p>}
-          className="mb-5"
-          role="status"
-          aria-live="polite"
-          aria-relevant="all"
+        <PaginatedTaskList
+          tasks={completedTasks}
+          paginatorRef={state.context.completedPaginatorRef!}
+          onToggle={handleToggleTask}
+          onDelete={handleDeleteTask}
+          fallback={<p>You have no completed tasks.</p>}
         />
-
-        <PaginationButton actorRef={state.context.completedPaginatorRef!} />
       </details>
     </Layout>
   );
 }
 
-// TODO: Maybe make a <PaginatedTaskList /> instead?
+type PaginatedTaskListProps = React.HTMLAttributes<HTMLUListElement> & {
+  tasks: Task[];
+  paginatorRef: ActorRefFrom<typeof paginatorMachine>;
+  onToggle?: TaskLiProps["onToggle"];
+  onEdit?: TaskLiProps["onEdit"];
+  onDelete?: TaskLiProps["onDelete"];
+  fallback: ReactNode;
+};
 
-function PaginationButton({
-  actorRef,
-}: {
-  actorRef: ActorRefFrom<typeof paginatorMachine>;
-}) {
-  const [state, send] = useActor(actorRef);
+function PaginatedTaskList({
+  tasks,
+  paginatorRef,
+  onToggle,
+  onEdit,
+  onDelete,
+  fallback,
+  className,
+  ...rest
+}: PaginatedTaskListProps) {
+  const [state, send] = useActor(paginatorRef);
+
   return (
     <>
+      <For
+        each={tasks}
+        render={(task) => (
+          <TaskLi
+            task={task}
+            key={task.id}
+            onToggle={onToggle}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        )}
+        fallback={fallback}
+        className={clsx("mb-5", className)}
+        role="status"
+        aria-live="polite"
+        aria-relevant="all"
+        {...rest}
+      />
+
       {state.matches("allLoaded") ? null : (
         <button
           type="button"

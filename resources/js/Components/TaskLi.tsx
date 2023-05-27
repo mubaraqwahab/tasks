@@ -9,7 +9,7 @@ import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import clsx from "clsx";
 
-type TaskLiProps = {
+export type TaskLiProps = {
   task: Task;
   onToggle?: (e: ToggleTaskLiEvent) => void;
   onEdit?: (e: EditTaskLiEvent) => void;

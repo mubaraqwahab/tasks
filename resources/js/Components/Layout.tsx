@@ -1,12 +1,10 @@
 import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head, Link } from "@inertiajs/react";
-import { PropsWithChildren, useEffect, useId, useState } from "react";
-import MyForm from "@/Components/MyForm";
+import { PropsWithChildren, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import axios from "axios";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
