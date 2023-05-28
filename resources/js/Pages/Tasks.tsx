@@ -16,6 +16,7 @@ import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import React, { ReactNode, useState } from "react";
 import { ActorRefFrom } from "xstate";
@@ -80,16 +81,6 @@ export default function TasksPage({
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
-  let syncError = "";
-  if (state.matches("tasks.someFailedToSync")) {
-    syncError = state.context.changelog
-      .filter((change) => !!change.lastError)
-      .map((change) => `${change.type} failed: ${change.lastError}`)
-      .join("\n");
-  } else if (state.matches("tasks.normal.passiveError.unknown")) {
-    syncError = state.context.syncError!.message;
-  }
-
   return (
     <Layout auth={auth} title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
@@ -106,23 +97,48 @@ export default function TasksPage({
             {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
           </span>
         </p>
-        {syncError && (
+        {state.matches("tasks.normal.passiveError.unknown") && (
           <details>
             <summary>Error:</summary>
             <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-sm">
-              <code>{syncError}</code>
+              <code>{state.context.syncError!.message}</code>
             </pre>
-            {state.matches("tasks.someFailedToSync") && (
-              <button
-                className="border p-1 bg-gray-100"
-                onClick={() => send({ type: "discardFailed" })}
-              >
-                Discard failed changes
-              </button>
-            )}
           </details>
         )}
       </div>
+
+      <AlertDialog.Root open={state.matches("tasks.someFailedToSync")}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 bg-gray-900/50" />
+          <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl w-[min(100vw-2rem,28rem)]">
+            <AlertDialog.Title className="font-semibold text-lg mb-3">
+              Sync conflict
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mb-3">
+              We couldn't sync some of your changes with our server due to some
+              conflicts. You'll need to discard these changes to continue
+              working:
+            </AlertDialog.Description>
+            <For
+              each={state.context.changelog
+                .filter((change) => !!change.lastError)
+                .map((change) => `${change.type} failed: ${change.lastError}`)}
+              render={(item, index) => <li key={index}>{item}</li>}
+              fallback={null}
+              className="px-3 mb-4 text-sm"
+            />
+
+            <AlertDialog.Action
+              className="block border rounded-md px-3 py-1 ml-auto font-medium bg-white hover:bg-gray-100"
+              onClick={() => {
+                send({ type: "discardFailed" });
+              }}
+            >
+              Discard changes
+            </AlertDialog.Action>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
 
       {/* <div className="mb-3">Errors? { JSON.stringify($page.props.errors) }</div> */}
 

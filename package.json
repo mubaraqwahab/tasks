@@ -10,6 +10,7 @@
     "@heroicons/react": "^2.0.18",
     "@inertiajs/react": "^1.0.0",
     "@prettier/plugin-php": "0.19.4",
+    "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-dropdown-menu": "^2.0.4",
     "@radix-ui/react-form": "^0.0.2",
