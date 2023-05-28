@@ -19,6 +19,7 @@ processes = []
   DB_HOST = "mubaraqwahab-tasks-mysql.internal"
   DB_DATABASE = "tasks"
   SANCTUM_STATEFUL_DOMAINS = "mubaraqwahab-tasks.fly.dev"
+  MAIL_MAILER = "mailgun"
 
 [experimental]
   auto_rollback = true
