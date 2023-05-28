@@ -173,7 +173,7 @@ export default function TaskLi({
             <Dialog.Overlay className="fixed inset-0 bg-gray-900/50" />
             <Dialog.Content className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl w-[min(100vw-2rem,28rem)]">
               <Dialog.Title className="font-semibold text-lg mb-3">
-                Are you sure you want to delete this task?
+                Confirm delete
               </Dialog.Title>
               <Dialog.Description asChild>
                 <div>
