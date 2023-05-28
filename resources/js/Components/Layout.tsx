@@ -50,7 +50,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                 align="end"
                 sideOffset={10}
                 loop
-                className="w-56 border rounded-md shadow-lg p-1.5 bg-white"
+                className="w-40 border rounded-md shadow-lg p-1 bg-white"
               >
                 <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                   {/* TODO: icon */}
@@ -64,6 +64,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                     method="post"
                     as="button"
                     onBefore={() => {
+                      // TODO: this is suboptimal
                       localStorage.removeItem("taskChangelog");
                     }}
                   >
