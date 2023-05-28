@@ -82,6 +82,7 @@ export default function TasksPage({
   };
 
   const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
+  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
   return (
     <Layout auth={auth} title="My tasks">
@@ -203,9 +204,18 @@ export default function TasksPage({
         />
       </div>
 
-      <details className="mb-8">
+      <details
+        className="mb-8"
+        open={isCompletedTasksOpen}
+        onToggle={(e) => {
+          const details = e.target as HTMLDetailsElement;
+          setIsCompletedTasksOpen(details.open);
+        }}
+      >
         <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
-          <ChevronDownIcon className="h-5 w-5" />
+          <ChevronDownIcon
+            className={clsx("h-5 w-5", isCompletedTasksOpen && "rotate-180")}
+          />
           Completed tasks
         </summary>
 
