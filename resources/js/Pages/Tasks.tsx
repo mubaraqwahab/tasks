@@ -18,7 +18,7 @@ import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useRef, useState } from "react";
 import { ActorRefFrom } from "xstate";
 import { useActor } from "@xstate/react";
 import { paginatorMachine } from "@/machines/task-paginator";
@@ -81,6 +81,8 @@ export default function TasksPage({
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
+  const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
+
   return (
     <Layout auth={auth} title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
@@ -97,6 +99,7 @@ export default function TasksPage({
             {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
           </span>
         </p>
+        {/* TODO: improve */}
         {state.matches("tasks.normal.passiveError.unknown") && (
           <details>
             <summary>Error:</summary>
@@ -110,7 +113,13 @@ export default function TasksPage({
       <AlertDialog.Root open={state.matches("tasks.someFailedToSync")}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 bg-gray-900/50" />
-          <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl w-[min(100vw-2rem,28rem)]">
+          <AlertDialog.Content
+            className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white border rounded-md p-6 shadow-xl w-[min(100vw-2rem,28rem)]"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              discardChangesBtnRef.current?.focus();
+            }}
+          >
             <AlertDialog.Title className="font-semibold text-lg mb-3">
               Sync conflict
             </AlertDialog.Title>
@@ -119,6 +128,7 @@ export default function TasksPage({
               conflicts. You'll need to discard these changes to continue
               working:
             </AlertDialog.Description>
+            {/* TODO: make this a <ol> */}
             <For
               each={state.context.changelog
                 .filter((change) => !!change.lastError)
@@ -129,6 +139,7 @@ export default function TasksPage({
             />
 
             <AlertDialog.Action
+              ref={discardChangesBtnRef}
               className="block border rounded-md px-3 py-1 ml-auto font-medium bg-white hover:bg-gray-100"
               onClick={() => {
                 send({ type: "discardFailed" });

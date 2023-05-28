@@ -317,7 +317,7 @@ export function createTasksMachine(
         async syncChangelog(context) {
           const response = await axios.post<SyncResponseData>(
             route("taskchanges.sync"),
-            context.changelog.map((change) => ({ ...change, type: "abc" }))
+            context.changelog
           );
           return response.data;
         },
