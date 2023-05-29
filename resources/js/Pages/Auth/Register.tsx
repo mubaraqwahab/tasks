@@ -31,6 +31,13 @@ export default function Register() {
       <Head title="Register" />
 
       <form onSubmit={submit}>
+        <a
+          href={route("login.google")}
+          className="flex p-2 justify-center border border-gray-400 rounded-md font-medium mb-5 bg-gray-100 hover:bg-gray-200"
+        >
+          Continue with Google
+        </a>
+
         <div>
           <InputLabel htmlFor="name" value="Name" />
 
