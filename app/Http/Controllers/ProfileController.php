@@ -21,6 +21,9 @@ class ProfileController extends Controller
         return Inertia::render("Profile/Edit", [
             "mustVerifyEmail" => $request->user() instanceof MustVerifyEmail,
             "status" => session("status"),
+            "hasPassword" => $request->user()->password !== null,
+            // TODO: get google email from token
+            "googleEmail" => $request->user()->email,
         ]);
     }
 
