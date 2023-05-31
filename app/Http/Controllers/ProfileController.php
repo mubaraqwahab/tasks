@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Socialite\Facades\Socialite;
 
 class ProfileController extends Controller
 {
@@ -18,12 +19,14 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
         return Inertia::render("Profile/Edit", [
-            "mustVerifyEmail" => $request->user() instanceof MustVerifyEmail,
+            "mustVerifyEmail" => $user instanceof MustVerifyEmail,
             "status" => session("status"),
-            "hasPassword" => $request->user()->password !== null,
-            // TODO: get google email from token
-            "googleEmail" => $request->user()->email,
+            "hasPassword" => $user->password !== null,
+            "googleEmail" => Socialite::driver("google")
+                ->userFromToken($user->google_token)
+                ->getEmail(),
         ]);
     }
 
