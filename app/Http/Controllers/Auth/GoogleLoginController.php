@@ -21,16 +21,19 @@ class GoogleLoginController extends Controller
     {
         $googleUser = Socialite::driver("google")->user();
 
-        $user = User::query()->firstWhere(
-            "email",
-            "=",
-            $googleUser->getEmail(),
-        );
+        // Search by Google ID first, so only one Google account is ever linked at a time.
+        $user = User::query()
+            // Existing user already has linked Google account
+            ->where("google_id", $googleUser->getId())
+            // Existing user is logging in with Google for the first time
+            ->orWhere("email", $googleUser->getEmail())
+            ->first();
 
         $queryParams = "";
 
         if ($user) {
             $user->update([
+                "google_id" => $googleUser->getId(),
                 "google_token" => $googleUser->token,
                 "google_refresh_token" => $googleUser->refreshToken,
             ]);
@@ -45,6 +48,7 @@ class GoogleLoginController extends Controller
             $user = User::query()->create([
                 "name" => $googleUser->getName(),
                 "email" => $googleUser->getEmail(),
+                "google_id" => $googleUser->getId(),
                 "google_token" => $googleUser->token,
                 "google_refresh_token" => $googleUser->refreshToken,
             ]);

@@ -16,9 +16,9 @@ return new class extends Migration {
                 ->nullable()
                 ->change();
             $table->string("google_token")->nullable();
+            // TODO: do I really need this? Perhaps this doc would help decide:
+            // https://developers.google.com/identity/protocols/oauth2/web-server
             $table->string("google_refresh_token")->nullable();
-            // TODO: add a constraint that password and google_token mustn't both be null.
-            // Either may be null, and both may be nonnull though.
         });
     }
 
