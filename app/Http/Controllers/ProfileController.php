@@ -35,10 +35,24 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty("email")) {
-            $request->user()->email_verified_at = null;
+        if ($user()->isDirty("email")) {
+            $user()->email_verified_at = null;
+
+            // TODO: send an email changed event OR ...
+
+            $shouldReVerifyEmail =
+                !$user->google_token ||
+                $user->email ===
+                    Socialite::driver("google")
+                        ->userFromToken($user->google_token)
+                        ->getEmail();
+
+            if ($shouldReVerifyEmail) {
+                // TODO: send email verification notification
+            }
         }
 
         $request->user()->save();

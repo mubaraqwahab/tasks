@@ -32,13 +32,20 @@ class GoogleLoginController extends Controller
         $queryParams = "";
 
         if ($user) {
+            // At this point, we know the user already has an email (though not necessarily
+            // a gmail). That email could be unverified in either of these situations:
+            //   - The user has never linked their gmail before.
+            //   - The user changed their email in the past, after linking their gmail.
+            // If this unverified email is the gmail used to log in now, then mark as verified.
+            // Otherwise, leave as is.
+
             $user->update([
                 "google_id" => $googleUser->getId(),
                 "google_token" => $googleUser->token,
                 "google_refresh_token" => $googleUser->refreshToken,
             ]);
 
-            if (!$user->hasVerifiedEmail()) {
+            if (!$user->hasVerifiedEmail() && $user->email === $googleUser->getEmail()) {
                 $user->markEmailAsVerified();
                 event(new Verified($user));
                 // See app\Http\Controllers\Auth\VerifyEmailController.php
