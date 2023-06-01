@@ -24,9 +24,7 @@ class ProfileController extends Controller
             "mustVerifyEmail" => $user instanceof MustVerifyEmail,
             "status" => session("status"),
             "hasPassword" => $user->password !== null,
-            "googleEmail" => Socialite::driver("google")
-                ->userFromToken($user->google_token)
-                ->getEmail(),
+            "googleEmail" => getGoogleEmail($user),
         ]);
     }
 
@@ -42,17 +40,10 @@ class ProfileController extends Controller
             $user()->email_verified_at = null;
 
             // TODO: send an email changed event OR ...
-
-            $shouldReVerifyEmail =
-                !$user->google_token ||
-                $user->email ===
-                    Socialite::driver("google")
-                        ->userFromToken($user->google_token)
-                        ->getEmail();
-
-            if ($shouldReVerifyEmail) {
+            if ($user->email !== getGoogleEmail($user)) {
                 // TODO: send email verification notification
             }
+            // TODO: keep in mind that this is currently the only place we can update the user's email
         }
 
         $request->user()->save();
