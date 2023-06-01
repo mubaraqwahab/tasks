@@ -33,17 +33,20 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        /**
+         * @var \App\Models\User
+         */
         $user = $request->user();
         $user->fill($request->validated());
 
         if ($user()->isDirty("email")) {
             $user()->email_verified_at = null;
 
-            // TODO: send an email changed event OR ...
             if ($user->email !== getGoogleEmail($user)) {
-                // TODO: send email verification notification
+                $user->sendEmailVerificationNotification();
+                // TODO: also send email changed notification to old and new emails
+                // You can get the old with $user->getOriginal('email')
             }
-            // TODO: keep in mind that this is currently the only place we can update the user's email
         }
 
         $request->user()->save();
