@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -23,10 +24,14 @@ class GoogleLoginController extends Controller
 
         // Search by Google ID first, so only one Google account is ever linked at a time.
         $user = User::query()
-            // Existing user already has linked Google account
-            ->where("google_id", $googleUser->getId())
+            // Existing user already has a linked Google account
+            ->where("google_email", $googleUser->getEmail())
             // Existing user is logging in with Google for the first time
-            ->orWhere("email", $googleUser->getEmail())
+            ->orWhere(function (Builder $query) use ($googleUser) {
+                $query
+                    ->whereNull("google_email")
+                    ->where("email", $googleUser->getEmail());
+            })
             ->first();
 
         $queryParams = "";
@@ -45,7 +50,10 @@ class GoogleLoginController extends Controller
                 "google_refresh_token" => $googleUser->refreshToken,
             ]);
 
-            if (!$user->hasVerifiedEmail() && $user->email === $googleUser->getEmail()) {
+            if (
+                !$user->hasVerifiedEmail() &&
+                $user->email === $googleUser->getEmail()
+            ) {
                 $user->markEmailAsVerified();
                 event(new Verified($user));
                 // See app\Http\Controllers\Auth\VerifyEmailController.php

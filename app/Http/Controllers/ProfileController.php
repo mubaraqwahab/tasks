@@ -24,7 +24,6 @@ class ProfileController extends Controller
             "mustVerifyEmail" => $user instanceof MustVerifyEmail,
             "status" => session("status"),
             "hasPassword" => $user->password !== null,
-            "googleEmail" => getGoogleEmail($user),
         ]);
     }
 
@@ -42,7 +41,7 @@ class ProfileController extends Controller
         if ($user()->isDirty("email")) {
             $user()->email_verified_at = null;
 
-            if ($user->email !== getGoogleEmail($user)) {
+            if ($user->email !== $user->google_email) {
                 $user->sendEmailVerificationNotification();
                 // TODO: also send email changed notification to old and new emails
                 // You can get the old with $user->getOriginal('email')

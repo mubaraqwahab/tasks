@@ -86,7 +86,7 @@ export default function TasksPage({
 
   return (
     <Layout auth={auth} title="My tasks">
-      <h1 className="font-semibold text-2xl mb-6">Upcoming tasks</h1>
+      <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
       {/* Status bar */}
       <div className="mb-5" role="status" aria-live="polite">
