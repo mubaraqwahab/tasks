@@ -3,27 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Socialite\Facades\Socialite;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(): Response
     {
-        $user = $request->user();
         return Inertia::render("Profile/Edit", [
-            "mustVerifyEmail" => $user instanceof MustVerifyEmail,
             "status" => session("status"),
-            "hasPassword" => $user->password !== null,
         ]);
     }
 
@@ -36,19 +31,8 @@ class ProfileController extends Controller
          * @var \App\Models\User
          */
         $user = $request->user();
-        $user->fill($request->validated());
 
-        if ($user()->isDirty("email")) {
-            $user()->email_verified_at = null;
-
-            if ($user->email !== $user->google_email) {
-                $user->sendEmailVerificationNotification();
-                // TODO: also send email changed notification to old and new emails
-                // You can get the old with $user->getOriginal('email')
-            }
-        }
-
-        $request->user()->save();
+        $user->update($request->safe()->only(["name"]));
 
         return Redirect::route("profile.edit");
     }
@@ -58,6 +42,7 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // TODO: how to confirm delete account??
         $request->validate([
             "password" => ["required", "current_password"],
         ]);
