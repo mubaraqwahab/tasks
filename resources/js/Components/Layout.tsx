@@ -1,4 +1,3 @@
-import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { PropsWithChildren, useState } from "react";

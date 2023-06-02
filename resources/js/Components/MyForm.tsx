@@ -1,4 +1,4 @@
-import { AuthContext } from "@/context";
+import { useAuth } from "@/utils";
 import { PropsWithChildren, forwardRef, useContext } from "react";
 
 type MyFormProps = React.FormHTMLAttributes<HTMLFormElement> &
@@ -13,12 +13,12 @@ const MyForm = forwardRef<HTMLFormElement, MyFormProps>(function MyForm(
   { method = "GET", children, ...rest },
   ref
 ) {
-  const { csrfToken } = useContext(AuthContext);
+  const auth = useAuth();
   return (
     <>
       <form ref={ref} method={method === "GET" ? method : "POST"} {...rest}>
-        {method !== "GET" && (
-          <input type="hidden" name="_token" value={csrfToken} />
+        {method !== "GET" && auth && (
+          <input type="hidden" name="_token" value={auth.csrfToken} />
         )}
         {!htmlMethods.includes(method) && (
           <input type="hidden" name="_method" value={method} />
