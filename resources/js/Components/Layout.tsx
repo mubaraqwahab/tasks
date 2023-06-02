@@ -1,23 +1,25 @@
 import { AuthContext } from "@/context";
 import { PageProps } from "@/types";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import { PropsWithChildren, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
+import { TASK_CHANGELOG_STORAGE_KEY, useAuth } from "@/utils";
 
 type LayoutProps = PropsWithChildren<{
   auth: PageProps["auth"];
   title: string;
 }>;
 
-export default function Layout({ auth, title, children }: LayoutProps) {
+export default function Layout({ title, children }: LayoutProps) {
+  const auth = useAuth();
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const dropdownMenuItemClass =
     "px-2 py-1 block w-full text-left rounded-md hover:bg-gray-100";
 
   return (
-    <AuthContext.Provider value={auth}>
+    <>
       <Head title={title} />
       <header className="border-b">
         <div className="container flex justify-between items-center py-3">
@@ -66,7 +68,7 @@ export default function Layout({ auth, title, children }: LayoutProps) {
                       as="button"
                       onBefore={() => {
                         // TODO: this is suboptimal
-                        localStorage.removeItem("taskChangelog");
+                        localStorage.removeItem(TASK_CHANGELOG_STORAGE_KEY);
                       }}
                     >
                       Log out
@@ -88,6 +90,6 @@ export default function Layout({ auth, title, children }: LayoutProps) {
       <main>
         <div className="container max-w-2xl py-6">{children}</div>
       </main>
-    </AuthContext.Provider>
+    </>
   );
 }

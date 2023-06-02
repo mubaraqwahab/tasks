@@ -5,8 +5,6 @@ use App\Http\Controllers\GoogleLoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware("guest")->group(function () {
-    Route::redirect("login", "login/google")->name("login");
-
     Route::get("login/google", [
         GoogleLoginController::class,
         "redirect",

@@ -17,7 +17,7 @@ class ProfileController extends Controller
      */
     public function edit(): Response
     {
-        return Inertia::render("Profile/Edit", [
+        return Inertia::render("Profile", [
             "status" => session("status"),
         ]);
     }
