@@ -32,7 +32,9 @@ class ProfileController extends Controller
          */
         $user = $request->user();
 
-        $user->update($request->safe()->only(["name"]));
+        $validated = $request->validate(["name" => ["string", "max:255"]]);
+
+        $user->update($validated);
 
         return Redirect::route("profile.edit");
     }

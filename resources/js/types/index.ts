@@ -25,7 +25,7 @@ export type PageProps<
   auth: {
     user: User;
     csrfToken: string;
-  };
+  } | null;
 };
 
 export interface Paginator<T> {

@@ -14,6 +14,7 @@ class Authenticate extends Middleware
     {
         return $request->expectsJson()
             ? null
+            // TODO: change to login.google? or change in login route?
             : route("login", ["redirectTo" => $request->fullUrl()]);
     }
 }
