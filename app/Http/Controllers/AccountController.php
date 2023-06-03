@@ -31,7 +31,7 @@ class AccountController extends Controller
          */
         $user = $request->user();
 
-        $validated = $request->validate(["name" => ["string", "max:255"]]);
+        $validated = $request->validate(["name" => "required|string|max:255"]);
 
         $user->update($validated);
 

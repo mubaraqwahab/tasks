@@ -27,7 +27,7 @@ export default function TaskLi({
 
   const taskNameElementId = `task-${task.id}-name`;
 
-  const handleToggle = p((e) => {
+  const handleToggle = p(() => {
     onToggle?.({
       type: "toggle",
       taskId: task.id,
