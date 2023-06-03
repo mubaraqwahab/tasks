@@ -37,12 +37,6 @@ class HandleInertiaRequests extends Middleware
                     "csrfToken" => csrf_token(),
                 ]
                 : null,
-            // TODO: Should I remove this?
-            "ziggy" => function () use ($request) {
-                return array_merge((new Ziggy())->toArray(), [
-                    "location" => $request->url(),
-                ]);
-            },
         ]);
     }
 }

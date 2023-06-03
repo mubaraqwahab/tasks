@@ -50,7 +50,7 @@ export default function Layout({ title, children }: LayoutProps) {
                   align="end"
                   sideOffset={10}
                   loop
-                  className="w-40 border rounded-md shadow-lg p-1 bg-white"
+                  className="w-48 border rounded-md shadow-lg p-1 bg-white"
                 >
                   <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                     {/* TODO: icon */}
