@@ -1,5 +1,4 @@
-import { PageProps } from "@/types";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { PropsWithChildren, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
@@ -7,7 +6,6 @@ import clsx from "clsx";
 import { TASK_CHANGELOG_STORAGE_KEY, useAuth } from "@/utils";
 
 type LayoutProps = PropsWithChildren<{
-  auth: PageProps["auth"];
   title: string;
 }>;
 
@@ -22,7 +20,7 @@ export default function Layout({ title, children }: LayoutProps) {
       <Head title={title} />
       <header className="border-b">
         <div className="container flex justify-between items-center py-3">
-          <Link href="/" className="font-medium">
+          <Link href={route("tasks.index")} className="font-medium">
             Tasks
           </Link>
 
@@ -56,7 +54,7 @@ export default function Layout({ title, children }: LayoutProps) {
                 >
                   <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
                     {/* TODO: icon */}
-                    <Link href={route("profile.edit")}>Account</Link>
+                    <Link href={route("account.edit")}>Account</Link>
                   </DropdownMenu.Item>
 
                   <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
@@ -87,7 +85,7 @@ export default function Layout({ title, children }: LayoutProps) {
         </div>
       </header>
       <main>
-        <div className="container max-w-2xl py-6">{children}</div>
+        <div className="container max-w-2xl pt-6 pb-8">{children}</div>
       </main>
     </>
   );

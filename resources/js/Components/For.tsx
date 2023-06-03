@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 
+// TODO: an 'as' prop
 export type ForProps<T> = React.HTMLAttributes<HTMLUListElement> & {
   /** The list to render */
   each: T[];

@@ -28,8 +28,7 @@ export type TaskPageProps = PageProps<{
   completedPaginator: Paginator<Task>;
 }>;
 
-export default function TasksPage({
-  auth,
+export default function Tasks({
   upcomingPaginator,
   completedPaginator,
 }: TaskPageProps) {
@@ -85,7 +84,7 @@ export default function TasksPage({
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
   return (
-    <Layout auth={auth} title="My tasks">
+    <Layout title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
       {/* Status bar */}

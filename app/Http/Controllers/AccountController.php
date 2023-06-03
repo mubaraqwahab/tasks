@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,22 +9,22 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ProfileController extends Controller
+class AccountController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Display the user's account settings page.
      */
     public function edit(): Response
     {
-        return Inertia::render("Profile", [
+        return Inertia::render("Account", [
             "status" => session("status"),
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's account information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
         /**
          * @var \App\Models\User
@@ -36,7 +35,7 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
-        return Redirect::route("profile.edit");
+        return Redirect::route("account.edit");
     }
 
     /**
