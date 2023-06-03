@@ -34,8 +34,6 @@ export default function Tasks({
 }: TaskPageProps) {
   const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
 
-  // Is orderby really needed? The data comes already sorted from the server.
-  // And you can insert new tasks intelligently to maintain the sort order.
   const upcomingTasks = orderBy(
     state.context.tasks.filter((task) => task.completed_at === null),
     ["created_at"],
