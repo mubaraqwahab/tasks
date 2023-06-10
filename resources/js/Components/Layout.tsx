@@ -31,7 +31,7 @@ export default function Layout({ title, children }: LayoutProps) {
           ) : (
             <a
               href={route("login.google")}
-              className="HeaderItem border border-gray-400 font-semibold text-sm bg-gray-100 hover:bg-gray-200"
+              className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
             >
               Continue with Google
             </a>

@@ -4,6 +4,6 @@
 
 @layer components {
   .HeaderItem {
-    @apply inline-flex items-center px-2 py-1 rounded-md;
+    @apply inline-flex items-center px-2 py-0.5 rounded-md;
   }
 }

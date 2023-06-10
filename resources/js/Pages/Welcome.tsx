@@ -4,17 +4,18 @@ import clsx from "clsx";
 export default function Welcome() {
   return (
     <Layout title="Welcome">
-      <div className={clsx("prose prose-h1:mb-0 py-6")}>
+      <div
+        className={clsx("prose prose-h1:mb-0 prose-a:underline-offset-2 py-6")}
+      >
         <h1>Tasks</h1>
         <p className="lead">
-          A simple to-do list app, inspired by{" "}
+          A simple to-do list app with an optimistic UI, inspired by{" "}
           <a href="https://todoist.com/">Todoist</a>.
         </p>
-        <p>A simple to-do list app, inspired by Todoist. It allows you:</p>
-        <ul>
-          <li>Create, edit, un/complete and delete tasks even while offline</li>
-          <li>Log in/sign up to manage your tasks on any device.</li>
-        </ul>
+
+        <p>
+          I made this to explore building a production-worthy full-stack app.
+        </p>
 
         <h2>The Why</h2>
 
