@@ -1,10 +1,15 @@
 import Layout from "@/Components/Layout";
+import clsx from "clsx";
 
 export default function Welcome() {
   return (
     <Layout title="Welcome">
-      <div className="prose lg:prose-lg">
+      <div className={clsx("prose prose-h1:mb-0 py-6")}>
         <h1>Tasks</h1>
+        <p className="lead">
+          A simple to-do list app, inspired by{" "}
+          <a href="https://todoist.com/">Todoist</a>.
+        </p>
         <p>A simple to-do list app, inspired by Todoist. It allows you:</p>
         <ul>
           <li>Create, edit, un/complete and delete tasks even while offline</li>
