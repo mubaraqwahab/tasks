@@ -14,7 +14,10 @@ export default function Welcome() {
         </p>
 
         <p>
-          I made this to explore building a production-worthy full-stack app.
+          I made this to explore building a production-worthy full-stack app. By
+          'production-worthy', I mean an app that implements relevant business
+          logic as well as tangential concerns such as transactional emails and
+          protection against common security vulnerabilities
         </p>
 
         <h2>The Why</h2>
