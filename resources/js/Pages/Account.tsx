@@ -15,7 +15,7 @@ export default function Account() {
   return (
     <Layout title="Account">
       <h1 className="font-semibold text-2xl mb-6">Account</h1>
-      <UpdateProfileSection className="pb-4 sm:pb-10 border-b" />
+      <UpdateProfileSection className="pb-4 sm:pb-10" />
       {/* <DeleteAccountSection className="py-4 sm:py-10" /> */}
     </Layout>
   );

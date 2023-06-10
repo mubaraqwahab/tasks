@@ -18,7 +18,7 @@ export default function Layout({ title, children }: LayoutProps) {
   return (
     <>
       <Head title={title} />
-      <header className="border-b">
+      <header className="border-b sticky top-0 left-0 bg-white">
         <div className="container flex justify-between items-center py-3">
           <Link href={route("tasks.index")} className="font-medium">
             Tasks
