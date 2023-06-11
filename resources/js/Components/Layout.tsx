@@ -22,7 +22,7 @@ export default function Layout({ title, children }: LayoutProps) {
           </Link>
 
           {auth ? (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 lg:space-x-3">
               <Link href={route("tasks.index")} className="HeaderItem">
                 My tasks
               </Link>
@@ -58,7 +58,7 @@ function AccountDropdownMenu() {
       onOpenChange={setIsDropdownMenuOpen}
     >
       <DropdownMenu.Trigger asChild>
-        <button type="button" className="HeaderItem gap-1.5">
+        <button type="button" className="HeaderItem px-0 gap-1.5">
           <span>{auth.user.name}</span>
           <ChevronDownIcon
             className={clsx("h-4 w-4", isDropdownMenuOpen && "rotate-180")}
