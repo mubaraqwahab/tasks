@@ -6,8 +6,8 @@ export default function Welcome() {
     <Layout title="Welcome">
       <div
         className={clsx(
-          "prose prose-h1:mb-0 prose-lead:mb-[1.25em] prose-a:underline-offset-2 py-6",
-          "lg:prose-lg"
+          "prose prose-a:underline-offset-2 pt-6 pb-8",
+          "lg:prose-lg lg:pt-8 lg:pb-10"
         )}
       >
         <h1>Tasks</h1>
@@ -21,10 +21,11 @@ export default function Welcome() {
         </p> */}
 
         <p>
-          When logged in, you can do the usual to-do list stuff&mdash;create,
-          complete, uncomplete and delete tasks&mdash;and you'll see the results
-          immediately, without having to wait for your changes to be sent to the
-          server (i.e. without waiting for any "loading..." sign).
+          When you're logged in, you can do the usual to-do list
+          stuff&mdash;create, edit, complete, uncomplete and delete
+          tasks&mdash;and you'll see the results immediately, without having to
+          wait for your changes to be sent to the server (i.e. without waiting
+          for any "loading..." sign).
         </p>
 
         <p>
@@ -53,8 +54,8 @@ export default function Welcome() {
           low-level framework (<a href="https://expressjs.com/">Express</a>) and
           had to manually set up authentication, session management, emails,
           input validation and security measures among other backend concerns,
-          which I knew little of. Thus, the app was very fragile and the
-          codebase untidy.
+          which I knew little about. As a result, the app was very fragile and
+          the codebase untidy.
         </p>
         {/*
         <p>
@@ -67,56 +68,39 @@ export default function Welcome() {
 
         <p>
           Learning from that experience, I built this app with{" "}
-          <a href="http://laravel.com/">Laravel</a>, a higher-level framework
-          with several built-in features to set up a good backend. (Something
-          about Laravel providing architecture and conventions)
+          <a href="http://laravel.com/">Laravel</a>. Laravel is a full-stack PHP
+          framework with many built-in features and conventions to handle all
+          the backend work I listed above (and more) with little manual
+          configuration.
         </p>
 
         <p>
-          On the front end, I used React (via Laravel's Inertia) and XState to
-          manage the complexity accompanying the optimistic UI I sought to
-          implement.
+          I also followed <a href="https://todoist.com/">Todoist</a>, a popular
+          task manager app, in several other design and technical decisions I
+          made for this Tasks app. Notably, I got the optimistic UI idea from
+          there and used <a href="http://react.dev/">React</a> (via Laravel's{" "}
+          <a href="https://inertiajs.com/">Inertia</a>) and{" "}
+          <a href="https://xstate.js.org/docs/">XState</a> on the front end to
+          manage the resulting complexity.{" "}
+          <a href="https://github.com/mubaraqwahab/tasks">
+            The source code is available on my GitHub
+          </a>
+          .
         </p>
-
-        {/* <p>
-          I followed Todoist in several design and technical decisions (such as
-          the optimistic UI). Along the way, ...something about adding (and
-          learning to implement by following Todoist) optimistic UI to improve
-          the UX. ...this was the fun and most time-consuming part. ...explain
-          how the optimistic UI works.
-        </p> */}
-
-        <p>The source code for the app is available on my GitHub...</p>
-
-        <h2>Stack</h2>
-        <ul>
-          <li>Laravel and its many packages</li>
-          <li>Inertiajs with React</li>
-          <li>Radix UI</li>
-          <li>Tailwind CSS</li>
-          <li>XState</li>
-        </ul>
 
         <p>
-          The backend stack - Laravel - was constant (I don't even remember why
-          I preferred it over other similar MVC's like Symfony and Django)
+          The app currently lacks many utility features like sorting and
+          filtering tasks and setting task deadlines. I plan to them over time
+          to practise iterative development.
         </p>
-
-        <p>The frontend however changed over time:</p>
-        <ul>
-          <li>Blade with Stimulus and custom make-shift JS components</li>
-          <li>Inertia with React and XState</li>
-        </ul>
 
         <p>
-          I'll discuss the reason for the switch later. It's worth noting that I
-          chose to use React with Inertia, instead of Vue, which appears to be
-          the de facto companion in the Laravel community. The main reason for
-          this was I could move faster in React: I already knew some React, but
-          I'd have had to learn Vue from scratch.
+          The rest of this article describes some interesting challenges I faced
+          while developing this app, as well as lessons I learnt.
         </p>
 
-        <h2>Problems and lessons learned?</h2>
+        <h2>Challenges and lessons learned</h2>
+        <p>TODO</p>
         <ul>
           <li>Declarative, reactive UI...</li>
           <li>Web apps as distributed systems; CRDTs and CQRS</li>
@@ -127,15 +111,9 @@ export default function Welcome() {
             How seemingly simple features invite complexity: e.g. optimistic
             UI.... Were it not for the optimistic UI requirement I placed on the
             frontend, I wouldn't have needed Inertia at all; Livewire would have
-            sufficed me... Mention that you'd love to see a simpler conventional
-            solution to implementing optimistic UIs in laravel
+            sufficed me... Mention that you'd love to see a simpler,
+            conventional solution to implementing optimistic UIs in laravel
           </li>
-        </ul>
-
-        <h2>Missing features/Plan</h2>
-        <ul>
-          <li>Undo un/complete</li>
-          <li>...</li>
         </ul>
       </div>
     </Layout>
