@@ -328,6 +328,12 @@ export function createTasksMachine(
 
 function applyChange(tasks: Task[], change: TaskChange): Task[] {
   if (change.type === "create") {
+    // Don't recreate an existing task. Strange though that
+    // it's possible to do so.
+    if (tasks.some((task) => task.id === change.task_id)) {
+      console.log("Skipping 'create' change", change);
+      return tasks;
+    }
     return [
       ...tasks,
       {
