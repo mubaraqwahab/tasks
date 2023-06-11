@@ -15,7 +15,7 @@ export default function Layout({ title, children }: LayoutProps) {
   return (
     <>
       <Head title={title} />
-      <header className="border-b sticky top-0 left-0 bg-white">
+      <header className="border-b sticky top-0 left-0 bg-white z-10">
         <div className="container flex justify-between items-center py-2">
           <Link href="/" className="font-medium text-lg">
             Tasks
