@@ -5,7 +5,10 @@ export default function Welcome() {
   return (
     <Layout title="Welcome">
       <div
-        className={clsx("prose prose-h1:mb-0 prose-a:underline-offset-2 py-6")}
+        className={clsx(
+          "prose prose-h1:mb-0 prose-lead:mb-[1.25em] prose-a:underline-offset-2 py-6",
+          "lg:prose-lg"
+        )}
       >
         <h1>Tasks</h1>
         <p className="lead">
@@ -13,44 +16,77 @@ export default function Welcome() {
           <a href="https://todoist.com/">Todoist</a>.
         </p>
 
+        {/* <p>
+          <img alt="A screenshot of the My tasks page" />
+        </p> */}
+
         <p>
-          I made this to explore building a production-worthy full-stack app. By
-          'production-worthy', I mean an app that implements relevant business
-          logic as well as tangential concerns such as transactional emails and
-          protection against common security vulnerabilities
+          When logged in, you can do the usual to-do list stuff&mdash;create,
+          complete, uncomplete and delete tasks&mdash;and you'll see the results
+          immediately, without having to wait for your changes to be sent to the
+          server (i.e. without waiting for any "loading..." sign).
         </p>
 
-        <h2>The Why</h2>
-
-        <p>To learn to build.. (the goal)</p>
         <p>
-          Sth about courses not teaching the mundane stuff, and sth about the
-          last app(s) you built being a real mess due to the minimalist tools I
-          used (e.g express)
+          The app assumes your changes will sync successfully with the server
+          most of the time, so it doesn't wait for them to sync. Instead, it
+          saves them locally and updates the UI before attempting (in the
+          background) to send them to the server. Hence the "optimistic UI",
+          which enables a seamless user experience. In the (hopefully) rare
+          event that your changes fail to sync, the app notifies you of that and
+          guides you to resolve the issue.
         </p>
 
-        <h2>Goal</h2>
+        <hr />
+
         <p>
-          (explore...) Create a complete, minimal, resilient production-worthy
-          app. "Complete" meaning the app should not only implement the
-          necessary business logic, but also the (mundane) tangential concerns
-          like user account management (e.g. email verification, password
-          recovery) and protection against common security vulnerabilities (e.g
-          CSRF, SQL injection). "Minimal" meaning the app should have a small
-          feature set, so that I may complete it in a short time. "Resilient"
-          meaning the app responds gracefully to exceptions and also that the
-          app is progressively enhanced
+          I started this to explore building a minimal, production-worthy
+          full-stack app. By "production-worthy", I mean (1) an app that
+          implements relevant business logic (such as managing tasks) as well as
+          necessary peripheral concerns (such as transactional emails), (2) an
+          app that is resilient to exceptions, and (3) an app with a reliable,
+          scalable architecture.
         </p>
 
-        <h2>Corollary</h2>
         <p>
-          An important consequence of the goal is that the codebase should be as
-          idiomatic as possible. That is, it should use A true full-stack
-          framework that would do the heavy lifting of code
-          architecture/organization (what's the diff lol?), auth, security, ORM,
-          email, etc. Reliable third-party packages etc over custom ones for
-          other nontrivial concerns (e.g UI state management, UI components)
+          The last time I tried building a similar app, I naively used a very
+          low-level framework (<a href="https://expressjs.com/">Express</a>) and
+          had to manually set up authentication, session management, emails,
+          input validation and security measures among other backend concerns,
+          which I knew little of. Thus, the app was very fragile and the
+          codebase untidy.
         </p>
+        {/*
+        <p>
+          This time, I decided to learn and use a fully featured
+          framework&mdash;one that would help me do all the backend setup and
+          also provide good conventions I could follow. I built this app with{" "}
+          <a href="http://laravel.com/">Laravel</a>, a full-stack PHP framework
+          with just the features I needed.
+        </p> */}
+
+        <p>
+          Learning from that experience, I built this app with{" "}
+          <a href="http://laravel.com/">Laravel</a>, a higher-level framework
+          with several built-in features to set up a good backend. (Something
+          about Laravel providing architecture and conventions)
+        </p>
+
+        <p>
+          On the front end, I used React (via Laravel's Inertia) and XState to
+          manage the complexity accompanying the optimistic UI I sought to
+          implement.
+        </p>
+
+        {/* <p>
+          I followed Todoist in several design and technical decisions (such as
+          the optimistic UI). Along the way, ...something about adding (and
+          learning to implement by following Todoist) optimistic UI to improve
+          the UX. ...this was the fun and most time-consuming part. ...explain
+          how the optimistic UI works.
+        </p> */}
+
+        <p>The source code for the app is available on my GitHub...</p>
 
         <h2>Stack</h2>
         <ul>
