@@ -1,9 +1,9 @@
 import Layout from "@/Components/Layout";
 import clsx from "clsx";
 
-export default function Welcome() {
+export default function About() {
   return (
-    <Layout title="Welcome">
+    <Layout title="About">
       <div
         className={clsx(
           "prose prose-a:underline-offset-2 pt-6 pb-8",
@@ -95,7 +95,7 @@ export default function Welcome() {
         </p>
 
         <p>
-          The rest of this article describes some interesting challenges I faced
+          The rest of this page describes some interesting challenges I faced
           while developing this app, as well as lessons I learnt.
         </p>
 

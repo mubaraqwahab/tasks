@@ -17,17 +17,12 @@ export default function Layout({ title, children }: LayoutProps) {
       <Head title={title} />
       <header className="border-b bg-white">
         <div className="container flex justify-between items-center py-2">
-          <Link href="/" className="font-medium text-lg">
+          <Link href={route("tasks.index")} className="font-medium text-lg">
             Tasks
           </Link>
 
           {auth ? (
-            <div className="flex items-center space-x-2 lg:space-x-3">
-              <Link href={route("tasks.index")} className="HeaderItem">
-                My tasks
-              </Link>
-              <AccountDropdownMenu />
-            </div>
+            <AccountDropdownMenu />
           ) : (
             <a
               href={route("login.google")}

@@ -16,9 +16,11 @@ use Inertia\Inertia;
 |
 */
 
-Route::get("/", function () {
-    return Inertia::render("Welcome");
-});
+Route::redirect("/", "/about");
+
+Route::get("/about", function () {
+    return Inertia::render("About");
+})->name("about");
 
 Route::middleware(["auth", "verified"])->group(function () {
     Route::resource("tasks", TaskController::class)->only([
