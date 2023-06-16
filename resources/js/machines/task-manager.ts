@@ -25,145 +25,135 @@ export function createTasksMachine(
   return createMachine(
     {
       id: "taskManager",
+      entry: "spawnPaginatorMachines",
+      initial: "initializing",
       states: {
-        tasks: {
-          entry: "spawnPaginatorMachines",
-          initial: "initializing",
+        someFailedToSync: {
+          description: "Modal state",
+          on: {
+            discardFailed: {
+              target: "reloading",
+              actions: "discardFailedChanges",
+            },
+          },
+        },
+        initializing: {
+          description:
+            "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
+          entry: "applyOfflineChanges",
+          always: {
+            target: "normal",
+          },
+        },
+        reloading: {
+          entry: "reload",
+          type: "final",
+        },
+        normal: {
+          initial: "idle",
           states: {
-            someFailedToSync: {
-              description: "Modal state",
-              on: {
-                discardFailed: {
-                  target: "reloading",
-                  actions: "discardFailedChanges",
+            allSynced: {
+              after: {
+                "500": {
+                  target: "#taskManager.normal.idle",
+                  actions: [],
+                  internal: false,
                 },
               },
             },
-            initializing: {
-              description:
-                "The machine applies any existing offline changes to the task list in this state. The changes will be passed to the machine through context, so the machine never directly interacts with  localStorage",
-              entry: "applyOfflineChanges",
-              always: {
-                target: "normal",
+            syncing: {
+              invoke: {
+                src: "syncChangelog",
+                onDone: [
+                  {
+                    target: "afterSyncing",
+                  },
+                ],
+                onError: [
+                  {
+                    target: "passiveError",
+                    cond: "isNetworkError",
+                  },
+                  {
+                    target: "#taskManager.normal.passiveError.server",
+                    cond: "isServerError",
+                  },
+                  {
+                    target: "#taskManager.normal.passiveError.unknown",
+                  },
+                ],
               },
             },
-            reloading: {
-              entry: "reload",
-              type: "final",
+            afterSyncing: {
+              entry: ["updateChangelogWithSyncResult", "resetAutoRetryCount"],
+              always: [
+                {
+                  target: "#taskManager.someFailedToSync",
+                  cond: "changelogContainsFailedChanges",
+                },
+                {
+                  target: "allSynced",
+                },
+              ],
             },
-            normal: {
-              initial: "allSynced",
+            passiveError: {
+              after: {
+                "10000": {
+                  target: "#taskManager.normal.beforeSyncing",
+                  cond: "maxAutoRetryCountNotReached",
+                  actions: ["incrementAutoRetryCount"],
+                  internal: false,
+                },
+              },
+              initial: "network",
               states: {
-                allSynced: {
-                  always: {
-                    target: "syncing",
-                    cond: "changelogIsNotEmpty",
-                  },
-                  on: {
-                    online: {},
-                  },
-                },
-                syncing: {
-                  invoke: {
-                    src: "syncChangelog",
-                    onDone: [
-                      {
-                        target: "afterSyncing",
-                      },
-                    ],
-                    onError: [
-                      {
-                        target: "passiveError",
-                        cond: "isNetworkError",
-                      },
-                      {
-                        target: "#taskManager.tasks.normal.passiveError.server",
-                        cond: "isServerError",
-                      },
-                      {
-                        target:
-                          "#taskManager.tasks.normal.passiveError.unknown",
-                      },
-                    ],
-                  },
-                },
-                afterSyncing: {
-                  entry: [
-                    "updateChangelogWithSyncResult",
-                    "resetAutoRetryCount",
-                  ],
-                  always: [
-                    {
-                      target: "#taskManager.tasks.someFailedToSync",
-                      cond: "changelogContainsFailedChanges",
-                    },
-                    {
-                      target: "allSynced",
-                    },
-                  ],
-                },
-                passiveError: {
-                  after: {
-                    "10000": {
-                      target: "#taskManager.tasks.normal.syncing",
-                      cond: "maxAutoRetryCountNotReached",
-                      actions: ["incrementAutoRetryCount"],
-                      internal: false,
-                    },
-                  },
-                  initial: "network",
-                  states: {
-                    network: {},
-                    server: {},
-                    unknown: {
-                      entry: "setError",
-                      exit: "clearError",
-                    },
-                  },
-                  on: {
-                    retrySync: {
-                      target: "syncing",
-                    },
-                    online: {
-                      target: "syncing",
-                    },
-                  },
+                network: {},
+                server: {},
+                unknown: {
+                  entry: "setError",
+                  exit: "clearError",
                 },
               },
               on: {
-                change: {
-                  actions: ["pushToChangelog", "applyLastChange"],
+                retrySync: {
+                  target: "syncing",
                 },
-                loadedMore: {
-                  actions: "pushLoadedTasks",
-                  description:
-                    "This event will be sent from the spawned paginator machines",
+                online: {
+                  target: "syncing",
+                },
+              },
+            },
+            beforeSyncing: {
+              always: {
+                target: "syncing",
+                cond: "isOnline",
+              },
+            },
+            idle: {
+              always: {
+                target: "beforeSyncing",
+                cond: "changelogIsNotEmpty",
+              },
+              on: {
+                online: {
+                  target: "idle",
+                  internal: false,
                 },
               },
             },
           },
-        },
-        network: {
-          initial: "online",
-          states: {
-            online: {
-              on: {
-                offline: {
-                  target: "offline",
-                },
-              },
+          on: {
+            change: {
+              actions: ["pushToChangelog", "applyLastChange"],
             },
-            offline: {
-              on: {
-                online: {
-                  target: "online",
-                },
-              },
+            loadedMore: {
+              actions: "pushLoadedTasks",
+              description:
+                "This event will be sent by the spawned paginator actors",
             },
           },
         },
       },
-      type: "parallel",
       schema: {
         context: {} as {
           tasks: Task[];
@@ -311,6 +301,7 @@ export function createTasksMachine(
           console.log(event),
           (event.data as AxiosError).code === "ERR_BAD_RESPONSE"
         ),
+        isOnline: () => navigator.onLine,
         maxAutoRetryCountNotReached: (context) => context.autoRetryCount < 2,
       },
       services: {

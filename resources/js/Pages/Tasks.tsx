@@ -12,7 +12,7 @@ import {
 } from "@/types";
 import { Task } from "@/types/models";
 import orderBy from "lodash.orderby";
-import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN, p, useOnline } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
@@ -33,6 +33,7 @@ export default function Tasks({
   completedPaginator,
 }: TaskPageProps) {
   const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
+  const isOnline = useOnline();
 
   const upcomingTasks = orderBy(
     state.context.tasks.filter((task) => task.completed_at === null),
@@ -81,24 +82,35 @@ export default function Tasks({
   const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
 
+  let statusText: string;
+  // TODO: this computation of the statusText pretends that the network status
+  // isn't orthogonal to the task sync status (which is wrong?). When in the
+  // someFailedToSync state, for example and network goes offline, should status
+  // text be 'Offline' or remain as 'Failed to sync'?
+  if (isOnline) {
+    if (state.matches("normal.syncing")) {
+      statusText = "Syncing...";
+    } else if (
+      state.matches("normal.passiveError") ||
+      state.matches("someFailedToSync")
+    ) {
+      statusText = "Failed to sync";
+    } else {
+      statusText = "All synced";
+    }
+  } else {
+    statusText = "Offline";
+  }
+
   return (
     <Layout title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
       {/* Status bar */}
       <div className="mb-5" role="status" aria-live="polite">
-        <p className="flex gap-x-1.5 flex-wrap mb-1.5">
-          Status:
-          <span>
-            {state.toStrings().findLast((s) => s.startsWith("network"))!}
-          </span>{" "}
-          &middot;
-          <span>
-            {state.toStrings().findLast((s) => s.startsWith("tasks"))!}
-          </span>
-        </p>
+        <p className="flex gap-x-1.5 flex-wrap mb-1.5">Status: {statusText}</p>
         {/* TODO: improve */}
-        {state.matches("tasks.normal.passiveError.unknown") && (
+        {state.matches("normal.passiveError.unknown") && (
           <details>
             <summary>Error:</summary>
             <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-sm">
@@ -108,7 +120,7 @@ export default function Tasks({
         )}
       </div>
 
-      <AlertDialog.Root open={state.matches("tasks.someFailedToSync")}>
+      <AlertDialog.Root open={state.matches("someFailedToSync")}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 bg-gray-900/50" />
           <AlertDialog.Content
