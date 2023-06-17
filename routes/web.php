@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TaskController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,7 +17,13 @@ use Inertia\Inertia;
 |
 */
 
-Route::redirect("/", "/about");
+Route::get("/", function (Request $request) {
+    if ($request->user()) {
+        return redirect(route("tasks.index"));
+    } else {
+        return redirect(route("about"));
+    }
+});
 
 Route::get("/about", function () {
     return Inertia::render("About");
