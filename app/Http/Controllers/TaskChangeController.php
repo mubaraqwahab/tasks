@@ -23,7 +23,7 @@ class TaskChangeController extends Controller
             $syncStatus[$change["id"]] = $this->syncChange($change, $request);
         }
 
-        throw 2;
+        // throw 2;
 
         return ["syncStatus" => $syncStatus];
     }

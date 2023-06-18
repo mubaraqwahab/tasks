@@ -11,8 +11,7 @@ import {
   Paginator,
 } from "@/types";
 import { Task } from "@/types/models";
-import orderBy from "lodash.orderby";
-import { NONEMPTY_WHEN_TRIMMED_PATTERN, p, useOnline } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN, p, truncate, useOnline } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
@@ -32,20 +31,25 @@ export default function Tasks({
   upcomingPaginator,
   completedPaginator,
 }: TaskPageProps) {
-  const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
   const isOnline = useOnline();
+  debugger;
+  const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
+  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
+  const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
 
-  const upcomingTasks = orderBy(
-    state.context.tasks.filter((task) => task.completed_at === null),
-    ["created_at"],
-    ["desc"]
+  const failedChanges = state.context.changelog.filter(
+    (change) => !!change.lastError
   );
 
-  const completedTasks = orderBy(
-    state.context.tasks.filter((task) => task.completed_at !== null),
-    ["completed_at"],
-    ["desc"]
-  );
+  const tasks = state.context.tasks;
+
+  const upcomingTasks = tasks
+    .filter((task) => task.completed_at === null)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  const completedTasks = tasks
+    .filter((task) => task.completed_at !== null)
+    .sort((a, b) => b.completed_at!.localeCompare(a.completed_at!));
 
   const handleCreateTask = p((e) => {
     const form = e.target as HTMLFormElement;
@@ -79,45 +83,27 @@ export default function Tasks({
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
-  const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
-  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
-
-  let statusText: string;
-  // TODO: this computation of the statusText pretends that the network status
-  // isn't orthogonal to the task sync status (which is wrong?). When in the
-  // someFailedToSync state, for example and network goes offline, should status
-  // text be 'Offline' or remain as 'Failed to sync'?
-  if (isOnline) {
-    if (state.matches("normal.syncing")) {
-      statusText = "Syncing...";
-    } else if (
-      state.matches("normal.passiveError") ||
-      state.matches("someFailedToSync")
-    ) {
-      statusText = "Failed to sync";
-    } else {
-      statusText = "All synced";
-    }
-  } else {
-    statusText = "Offline";
-  }
-
   return (
     <Layout title="My tasks">
       <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
       {/* Status bar */}
       <div className="mb-5" role="status" aria-live="polite">
-        <p className="flex gap-x-1.5 flex-wrap mb-1.5">Status: {statusText}</p>
-        {/* TODO: improve */}
-        {state.matches("normal.passiveError.unknown") && (
-          <details>
-            <summary>Error:</summary>
-            <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-sm">
-              <code>{state.context.syncError!.message}</code>
-            </pre>
-          </details>
-        )}
+        {!isOnline ? (
+          <span
+            className="text-sm"
+            title="We'll save your changes locally and sync them when you're back online"
+          >
+            Offline
+          </span>
+        ) : state.matches("normal.passiveError.network") ? (
+          <span
+            className="text-sm"
+            title="We'll save your changes locally and sync them when you're back online"
+          >
+            Offline
+          </span>
+        ) : null}
       </div>
 
       <AlertDialog.Root open={state.matches("someFailedToSync")}>
@@ -140,13 +126,27 @@ export default function Tasks({
             </AlertDialog.Description>
             {/* TODO: make this a <ol> */}
             <For
-              each={state.context.changelog
-                .filter((change) => !!change.lastError)
-                .map((change) => `${change.type} failed: ${change.lastError}`)}
+              each={failedChanges.map((change) => {
+                const taskName =
+                  tasks.find((task) => task.id === change.task_id)?.name ?? "";
+                return (
+                  <>
+                    {change.type} task <b>{truncate(taskName, 30)}</b>:{" "}
+                    {change.lastError}
+                  </>
+                );
+              })}
               render={(item, index) => <li key={index}>{item}</li>}
               fallback={null}
               className="px-3 mb-4 text-sm"
             />
+
+            <details className="text-sm mb-4">
+              <summary className="w-fit-content">Show full changelog</summary>
+              <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-xs">
+                <code>{JSON.stringify(failedChanges, null, 2)}</code>
+              </pre>
+            </details>
 
             <AlertDialog.Action
               ref={discardChangesBtnRef}

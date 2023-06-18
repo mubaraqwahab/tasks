@@ -14,6 +14,11 @@ export function p<E extends FormEvent>(listener: (e: E) => void) {
   };
 }
 
+export function truncate(str: string, maxLen: number) {
+  if (str.length <= maxLen) return str;
+  return str.slice(0, maxLen - 3) + "...";
+}
+
 export const NONEMPTY_WHEN_TRIMMED_PATTERN = String.raw`\s*\S(.*\S)?\s*`;
 
 export const TASK_CHANGELOG_STORAGE_KEY = "taskChangelog";
