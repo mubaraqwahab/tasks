@@ -92,17 +92,33 @@ export default function Tasks({
         {!isOnline ? (
           <span
             className="text-sm"
-            title="We'll save your changes locally and sync them when you're back online"
+            title="We'll save your changes locally for now and sync them when you're back online."
           >
             Offline
           </span>
         ) : state.matches("normal.passiveError.network") ? (
-          <span
+          <button
             className="text-sm"
-            title="We'll save your changes locally and sync them when you're back online"
+            title="We couldn't sync your changes due to a network error. Click to retry."
+            onClick={() => send({ type: "retrySync" })}
           >
-            Offline
-          </span>
+            Failed to sync
+          </button>
+        ) : state.matches("normal.passiveError.server") ? (
+          <button
+            className="text-sm"
+            title="We couldn't sync your changes due to a (hopefully temporary) server error. Click to retry."
+            onClick={() => send({ type: "retrySync" })}
+          >
+            Failed to sync
+          </button>
+        ) : state.matches("normal.passiveError.unknown") ? (
+          <button
+            className="text-sm"
+            title="We couldn't sync your changes due to an unknown error. Click for more info."
+          >
+            Failed to sync
+          </button>
         ) : null}
       </div>
 
