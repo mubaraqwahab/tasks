@@ -18,7 +18,6 @@ class TaskChangeController extends Controller
         $changes = $request->all();
         $syncStatus = [];
 
-        return response("", 487);
         // TODO: validate that each $change is an array.
         foreach ($changes as $change) {
             $syncStatus[$change["id"]] = $this->syncChange($change, $request);
