@@ -240,7 +240,7 @@ export function createTasksMachine(
           changelog(context, event) {
             const { syncStatus } = event.data;
             return context.changelog
-              .filter((change) => syncStatus[change.id].type === "error")
+              .filter((change) => syncStatus[change.id]?.type === "error")
               .map((change) => ({
                 ...change,
                 lastError: (syncStatus[change.id] as SyncErrorStatus).error,

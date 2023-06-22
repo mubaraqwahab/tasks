@@ -16,11 +16,14 @@ import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import * as Popover from "@radix-ui/react-popover";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import React, { ReactNode, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { ActorRefFrom } from "xstate";
 import { useActor } from "@xstate/react";
 import { paginatorMachine } from "@/machines/task-paginator";
+import { AxiosError } from "axios";
 
 export type TaskPageProps = PageProps<{
   upcomingPaginator: Paginator<Task>;
@@ -32,7 +35,6 @@ export default function Tasks({
   completedPaginator,
 }: TaskPageProps) {
   const isOnline = useOnline();
-  debugger;
   const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
   const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
   const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
@@ -83,43 +85,115 @@ export default function Tasks({
     send({ type: "change", changeType: "delete", taskId: e.taskId });
   };
 
+  useEffect(() => {
+    // @ts-ignore
+    window.state = state;
+    return () => {
+      // @ts-ignore
+      delete window.state;
+    };
+  }, [state]);
+
+  console.log({ error: state.context.syncError });
+
   return (
     <Layout title="My tasks">
-      <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
+      <div className="flex gap-x-3 items-center">
+        <h1 className="font-semibold text-2xl mb-6">My tasks</h1>
 
-      {/* Status bar */}
-      <div className="mb-5" role="status" aria-live="polite">
-        {!isOnline ? (
-          <span
-            className="text-sm"
-            title="We'll save your changes locally for now and sync them when you're back online."
-          >
-            Offline
-          </span>
-        ) : state.matches("normal.passiveError.network") ? (
-          <button
-            className="text-sm"
-            title="We couldn't sync your changes due to a network error. Click to retry."
-            onClick={() => send({ type: "retrySync" })}
-          >
-            Failed to sync
-          </button>
-        ) : state.matches("normal.passiveError.server") ? (
-          <button
-            className="text-sm"
-            title="We couldn't sync your changes due to a (hopefully temporary) server error. Click to retry."
-            onClick={() => send({ type: "retrySync" })}
-          >
-            Failed to sync
-          </button>
-        ) : state.matches("normal.passiveError.unknown") ? (
-          <button
-            className="text-sm"
-            title="We couldn't sync your changes due to an unknown error. Click for more info."
-          >
-            Failed to sync
-          </button>
-        ) : null}
+        {/* Status bar */}
+        <div className="mb-5" role="status" aria-live="polite">
+          {!isOnline ? (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <span className="text-sm" tabIndex={-1}>
+                  Offline
+                </span>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content className="text-sm">
+                  We'll save your changes locally for now and sync them when
+                  you're back online.
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          ) : state.matches("normal.passiveError.network") ? (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button
+                  type="button"
+                  className="text-sm"
+                  onClick={() => send({ type: "retrySync" })}
+                >
+                  Failed to sync. Retry
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content className="text-sm">
+                  We couldn't sync your changes due to a network error. Click to
+                  retry.
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          ) : state.matches("normal.passiveError.server") ? (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button
+                  type="button"
+                  className="text-sm"
+                  onClick={() => send({ type: "retrySync" })}
+                >
+                  Failed to sync. Retry
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content className="text-sm">
+                  We couldn't sync your changes due to a (hopefully temporary)
+                  server error. Click to retry.
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          ) : state.matches("normal.passiveError.unknown") ? (
+            <Popover.Root>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Popover.Trigger asChild>
+                    <button type="button" className="text-sm">
+                      Failed to sync. View error
+                    </button>
+                  </Popover.Trigger>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content className="text-sm">
+                    We couldn't sync your changes due to an unknown error. Click
+                    for more info.
+                    <Tooltip.Arrow />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+              <Popover.Portal>
+                <Popover.Content className="bg-white border w-[400px] p-2 text-sm">
+                  <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-xs">
+                    <code>
+                      {JSON.stringify(state.context.syncError!, null, 2)}
+                    </code>
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => send({ type: "retrySync" })}
+                  >
+                    Retry
+                  </button>
+                  {/* <Popover.Close />
+                  <Popover.Arrow /> */}
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          ) : null}
+        </div>
       </div>
 
       <AlertDialog.Root open={state.matches("someFailedToSync")}>

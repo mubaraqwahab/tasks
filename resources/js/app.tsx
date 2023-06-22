@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { createInertiaApp } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { StrictMode } from "react";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 const appName =
   window.document.getElementsByTagName("title")[0]?.innerText || "Tasks";
@@ -21,7 +22,9 @@ createInertiaApp({
 
     root.render(
       <StrictMode>
-        <App {...props} />
+        <Tooltip.Provider>
+          <App {...props} />
+        </Tooltip.Provider>
       </StrictMode>
     );
   },
