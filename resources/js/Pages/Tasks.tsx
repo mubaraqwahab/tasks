@@ -23,7 +23,6 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { ActorRefFrom } from "xstate";
 import { useActor } from "@xstate/react";
 import { paginatorMachine } from "@/machines/task-paginator";
-import { AxiosError } from "axios";
 
 export type TaskPageProps = PageProps<{
   upcomingPaginator: Paginator<Task>;
