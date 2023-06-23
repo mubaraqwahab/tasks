@@ -93,8 +93,6 @@ export default function Tasks({
     };
   }, [state]);
 
-  console.log({ error: state.context.syncError });
-
   return (
     <Layout title="My tasks">
       <div className="flex gap-x-3 items-center">
@@ -106,14 +104,13 @@ export default function Tasks({
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <span className="text-sm" tabIndex={-1}>
-                  Offline
+                  You're offline
                 </span>
               </Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Content className="text-sm">
-                  We'll save your changes locally for now and sync them when
-                  you're back online.
-                  <Tooltip.Arrow />
+                  We'll save your changes to this device for now and sync them
+                  when you're back online.
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -132,7 +129,6 @@ export default function Tasks({
                 <Tooltip.Content className="text-sm">
                   We couldn't sync your changes due to a network error. Click to
                   retry.
-                  <Tooltip.Arrow />
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -151,7 +147,6 @@ export default function Tasks({
                 <Tooltip.Content className="text-sm">
                   We couldn't sync your changes due to a (hopefully temporary)
                   server error. Click to retry.
-                  <Tooltip.Arrow />
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -169,7 +164,6 @@ export default function Tasks({
                   <Tooltip.Content className="text-sm">
                     We couldn't sync your changes due to an unknown error. Click
                     for more info.
-                    <Tooltip.Arrow />
                   </Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
