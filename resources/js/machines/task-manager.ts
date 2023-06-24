@@ -5,6 +5,7 @@ import { useMachine } from "@xstate/react";
 import { useEffect, useRef } from "react";
 import { Paginator } from "../types";
 import { paginatorMachine } from "./task-paginator";
+import { useOnline } from "@/utils";
 
 type SyncErrorStatus = {
   type: "error";
@@ -358,8 +359,6 @@ function applyChange(tasks: Task[], change: TaskChange): Task[] {
 }
 
 function getOfflineChangelog(): TaskChange[] {
-  if (typeof window === "undefined") return [];
-
   const changelogAsJSON = localStorage.getItem("taskChangelog") || "[]";
   // Note: if the persisted changelog isn't an array of task changes,
   // or not an array at all, then someone must have tampered with it.
@@ -375,27 +374,23 @@ export function useTasksMachine(
     createTasksMachine(upcomingPaginator, completedPaginator)
   );
 
-  if (typeof window !== "undefined") {
+  useEffect(() => {
     localStorage.setItem(
       "taskChangelog",
       JSON.stringify(state.context.changelog)
     );
-  }
 
-  console.log("Offline changelog", getOfflineChangelog());
+    console.log("Offline changelog", getOfflineChangelog());
+  }, [state.context.changelog]);
+
+  const isOnline = useOnline();
 
   useEffect(() => {
-    const handleOnline = () => send({ type: "online" });
-    const handleOffline = () => send({ type: "offline" });
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+    // NOTE: this sends an (unnecessary) online event on the first render.
+    // If that's ever a problem, you can avoid sending on the first render.
+    send({ type: isOnline ? "online" : "offline" });
+    console.log("Event sent:", isOnline ? "online" : "offline");
+  }, [isOnline]);
 
   return [state, send, ...rest] as ReturnType<
     typeof useMachine<ReturnType<typeof createTasksMachine>>
