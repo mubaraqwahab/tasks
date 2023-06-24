@@ -25,8 +25,6 @@ class GoogleLoginController extends Controller
             ->where("email", $googleUser->getEmail())
             ->first();
 
-        $queryString = "";
-
         if (!$user) {
             $user = User::query()->create([
                 "name" => $googleUser->getName(),
@@ -35,11 +33,10 @@ class GoogleLoginController extends Controller
             $user->markEmailAsVerified();
             event(new Registered($user));
             event(new Verified($user));
-            $queryString = "?verified=1";
         }
 
         Auth::login($user, true);
 
-        return redirect()->intended(RouteServiceProvider::HOME . $queryString);
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 }

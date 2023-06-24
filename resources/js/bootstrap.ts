@@ -16,6 +16,12 @@ axios.interceptors.response.use(undefined, async (error: AxiosError) => {
     return axios(error.response.config);
   } else if (error.response?.status === 409) {
     // See https://inertiajs.com/the-protocol#asset-versioning
+    // TODO: this is a temporary (bad) fix.
+    // The appropriate thing to do is to navigate to the URL
+    // specified by Inertia in the response headers, just like
+    // Inertia does.
+    // Also consider not implementing this at all; what if you
+    // could use Inertia's router for the infinite scroll?
     window.location.reload();
   }
   throw error;
@@ -24,9 +30,9 @@ axios.interceptors.response.use(undefined, async (error: AxiosError) => {
 let ziggyRoute = window.route;
 
 /**
- * A convenience wrapper over Ziggy's route() with the absolute arg
- * set to false by default. This means route() calls will now, by
- * default, return URLs like '/abc' instead of 'https://example.com/abc'
+ * A convenience wrapper over Ziggy's `route()` with the absolute arg
+ * set to `false` by default. This means `route()` calls will now, by
+ * default, return URLs like `'/abc'` instead of `'https://example.com/abc'`
  */
 window.route = function route(name, params, absolute = false, config) {
   // @ts-ignore

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TaskController;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -51,3 +52,9 @@ Route::middleware("auth")->group(function () {
 });
 
 require __DIR__ . "/auth.php";
+
+if (app("env") === "local") {
+    Route::get("/notifications/welcome", function (Request $request) {
+        return (new WelcomeNotification())->toMail($request->user());
+    });
+}
