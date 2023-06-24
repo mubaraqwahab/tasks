@@ -18,6 +18,11 @@ type SyncResponseData = {
 
 type PaginatorRef = ActorRefFrom<typeof paginatorMachine>;
 
+// TODOs:
+// * try syncing when a change occurs in the passiveError state
+// * consider delaying the next sync by a few milliseconds in the above situation
+// * temporarily disable auto-retries
+
 // Visualize at https://stately.ai/registry/editor/6db2346c-934c-4158-a0f2-c0d70a3076e7?machineId=bb219001-6bcc-46ef-b325-f48b5f95c317&mode=Design
 export function createTasksMachine(
   upcomingPaginator: Paginator<Task>,
@@ -380,7 +385,9 @@ export function useTasksMachine(
       JSON.stringify(state.context.changelog)
     );
 
-    console.log("Offline changelog", getOfflineChangelog());
+    if (import.meta.env.DEV) {
+      console.log("Offline changelog", getOfflineChangelog());
+    }
   }, [state.context.changelog]);
 
   const isOnline = useOnline();
@@ -391,6 +398,20 @@ export function useTasksMachine(
     send({ type: isOnline ? "online" : "offline" });
     console.log("Event sent:", isOnline ? "online" : "offline");
   }, [isOnline]);
+
+  // For debugging
+  useEffect(() => {
+    // @ts-ignore
+    window.$state = state;
+    // @ts-ignore
+    window.$send = send;
+    return () => {
+      // @ts-ignore
+      delete window.$state;
+      // @ts-ignore
+      delete window.$send;
+    };
+  }, [state, send]);
 
   return [state, send, ...rest] as ReturnType<
     typeof useMachine<ReturnType<typeof createTasksMachine>>

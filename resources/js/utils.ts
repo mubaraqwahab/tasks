@@ -2,18 +2,6 @@ import { usePage } from "@inertiajs/react";
 import { FormEvent, useEffect, useState } from "react";
 import { PageProps } from "./types";
 
-/**
- * Prevent default without typing `e.preventDefault()`
- * @example
- * <form onSubmit={p((e) => console.log(e.target))} />
- */
-export function p<E extends FormEvent>(listener: (e: E) => void) {
-  return function (e: E) {
-    e.preventDefault();
-    listener(e);
-  };
-}
-
 export function truncate(str: string, maxLen: number) {
   if (str.length <= maxLen) return str;
   return str.slice(0, maxLen - 3) + "...";

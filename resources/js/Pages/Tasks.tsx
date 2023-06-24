@@ -1,7 +1,6 @@
 import MyForm from "@/Components/MyForm";
 import Layout from "@/Components/Layout";
 import TaskLi, { TaskLiProps } from "@/Components/TaskLi";
-import For from "@/Components/For";
 import { createTasksMachine, useTasksMachine } from "@/machines/task-manager";
 import {
   ToggleTaskLiEvent,
@@ -11,7 +10,7 @@ import {
   Paginator,
 } from "@/types";
 import { Task } from "@/types/models";
-import { NONEMPTY_WHEN_TRIMMED_PATTERN, p, truncate, useOnline } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN, truncate, useOnline } from "@/utils";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import * as Form from "@radix-ui/react-form";
@@ -19,7 +18,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import * as Popover from "@radix-ui/react-popover";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { FormEvent, ReactNode, useEffect, useRef } from "react";
 import { ActorRefFrom, StateFrom } from "xstate";
 import { useActor } from "@xstate/react";
 import { paginatorMachine } from "@/machines/task-paginator";
@@ -33,9 +32,7 @@ export default function Tasks({
   upcomingPaginator,
   completedPaginator,
 }: TaskPageProps) {
-  const isOnline = useOnline();
   const [state, send] = useTasksMachine(upcomingPaginator, completedPaginator);
-  const [isCompletedTasksOpen, setIsCompletedTasksOpen] = useState(false);
   const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
 
   const failedChanges = state.context.changelog.filter(
@@ -52,7 +49,8 @@ export default function Tasks({
     .filter((task) => task.completed_at !== null)
     .sort((a, b) => b.completed_at!.localeCompare(a.completed_at!));
 
-  const handleCreateTask = p((e) => {
+  const handleCreateTask = (e: FormEvent) => {
+    e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     send({
@@ -61,7 +59,7 @@ export default function Tasks({
       taskName: (formData.get("taskName") as string).trim(),
     });
     form.reset();
-  });
+  };
 
   const handleToggleTask = (e: ToggleTaskLiEvent) => {
     send({
@@ -85,15 +83,6 @@ export default function Tasks({
   };
 
   const handleRetrySync = () => send({ type: "retrySync" });
-
-  useEffect(() => {
-    // @ts-ignore
-    window.state = state;
-    return () => {
-      // @ts-ignore
-      delete window.state;
-    };
-  }, [state]);
 
   return (
     <Layout title="My tasks">
@@ -120,22 +109,19 @@ export default function Tasks({
               conflicts. You'll need to discard these changes to continue
               working:
             </AlertDialog.Description>
-            {/* TODO: make this a <ol> */}
-            <For
-              each={failedChanges.map((change) => {
+
+            <ol className="px-3 mb-4 text-sm">
+              {failedChanges.map((change, index) => {
                 const taskName =
                   tasks.find((task) => task.id === change.task_id)?.name ?? "";
                 return (
-                  <>
+                  <li key={index}>
                     {change.type} task <b>{truncate(taskName, 30)}</b>:{" "}
                     {change.lastError}
-                  </>
+                  </li>
                 );
               })}
-              render={(item, index) => <li key={index}>{item}</li>}
-              fallback={null}
-              className="px-3 mb-4 text-sm"
-            />
+            </ol>
 
             <details className="text-sm mb-4">
               <summary className="w-fit-content">Show full changelog</summary>
@@ -209,18 +195,9 @@ export default function Tasks({
         />
       </div>
 
-      <details
-        className="mb-8"
-        open={isCompletedTasksOpen}
-        onToggle={(e) => {
-          const details = e.target as HTMLDetailsElement;
-          setIsCompletedTasksOpen(details.open);
-        }}
-      >
+      <details className="mb-8 group">
         <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
-          <ChevronDownIcon
-            className={clsx("h-5 w-5", isCompletedTasksOpen && "rotate-180")}
-          />
+          <ChevronDownIcon className="h-5 w-5 group-open:rotate-180" />
           Completed tasks
         </summary>
 
@@ -272,7 +249,11 @@ function StatusBar({
             </button>
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Content className="bg-white border max-w-sm p-2 text-sm">
+            <Popover.Content
+              className="text-sm max-w-sm bg-white border rounded shadow py-2 px-3"
+              side="bottom"
+              sideOffset={8}
+            >
               <p>
                 We couldn't sync your changes due to{" "}
                 {state.matches("normal.passiveError.network")
@@ -289,11 +270,8 @@ function StatusBar({
                   </code>
                 </pre>
               )}
-              <p role="status" aria-live="polite" aria-atomic="true">
-                Retrying in N seconds
-              </p>
               <button type="button" onClick={onRetrySync}>
-                Retry now
+                Retry
               </button>
               {/* <Popover.Close /> */}
             </Popover.Content>
@@ -327,24 +305,28 @@ function PaginatedTaskList({
 
   return (
     <>
-      <For
-        each={tasks}
-        render={(task) => (
-          <TaskLi
-            task={task}
-            key={task.id}
-            onToggle={onToggle}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        )}
-        fallback={fallback}
-        className={clsx("mb-5", className)}
-        role="status"
-        aria-live="polite"
-        aria-relevant="all"
-        {...rest}
-      />
+      {tasks.length ? (
+        <ul
+          className={clsx("mb-5", className)}
+          role="status"
+          aria-live="polite"
+          // TODO
+          aria-relevant="all"
+          {...rest}
+        >
+          {tasks.map((task) => (
+            <TaskLi
+              task={task}
+              key={task.id}
+              onToggle={onToggle}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </ul>
+      ) : (
+        fallback
+      )}
 
       {state.matches("allLoaded") ? null : (
         <button

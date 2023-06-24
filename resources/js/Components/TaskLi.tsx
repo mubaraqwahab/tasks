@@ -1,12 +1,12 @@
 import { ToggleTaskLiEvent, EditTaskLiEvent, DeleteTaskLiEvent } from "@/types";
 import { Task } from "@/types/models";
 import MyForm from "@/Components/MyForm";
-import { NONEMPTY_WHEN_TRIMMED_PATTERN, p } from "@/utils";
+import { NONEMPTY_WHEN_TRIMMED_PATTERN } from "@/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Form from "@radix-ui/react-form";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import clsx from "clsx";
 
 export type TaskLiProps = {
@@ -27,15 +27,17 @@ export default function TaskLi({
 
   const taskNameElementId = `task-${task.id}-name`;
 
-  const handleToggle = p(() => {
+  const handleToggle = (e: FormEvent) => {
+    e.preventDefault();
     onToggle?.({
       type: "toggle",
       taskId: task.id,
       completed: !task.completed_at,
     });
-  });
+  };
 
-  const handleEdit = p((e) => {
+  const handleEdit = (e: FormEvent) => {
+    e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const taskNameValue = formData.get("taskName") as string;
@@ -44,11 +46,12 @@ export default function TaskLi({
       taskId: task.id,
       taskName: taskNameValue.trim(),
     });
-  });
+  };
 
-  const handleDelete = p(() => {
+  const handleDelete = (e: FormEvent) => {
+    e.preventDefault();
     onDelete?.({ type: "delete", taskId: task.id });
-  });
+  };
 
   return (
     <li id={`task-${task.id}`} className="flex items-center py-3 border-b">
