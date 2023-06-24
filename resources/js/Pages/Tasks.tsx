@@ -195,20 +195,22 @@ export default function Tasks({
         />
       </div>
 
-      <details className="mb-8 group">
-        <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
-          <ChevronDownIcon className="h-5 w-5 group-open:rotate-180" />
-          Completed tasks
-        </summary>
+      {completedTasks.length > 0 && (
+        <details className="mb-8 group">
+          <summary className="mb-2 py-1 inline-flex items-center gap-2 font-medium">
+            <ChevronDownIcon className="h-5 w-5 group-open:rotate-180" />
+            Completed tasks
+          </summary>
 
-        <PaginatedTaskList
-          tasks={completedTasks}
-          paginatorRef={state.context.completedPaginatorRef!}
-          onToggle={handleToggleTask}
-          onDelete={handleDeleteTask}
-          fallback={<p>You have no completed tasks.</p>}
-        />
-      </details>
+          <PaginatedTaskList
+            tasks={completedTasks}
+            paginatorRef={state.context.completedPaginatorRef!}
+            onToggle={handleToggleTask}
+            onDelete={handleDeleteTask}
+            fallback={<p>You have no completed tasks.</p>}
+          />
+        </details>
+      )}
     </Layout>
   );
 }
