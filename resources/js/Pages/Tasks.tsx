@@ -266,7 +266,7 @@ function StatusBar({
               {state.matches("normal.passiveError.unknown") && (
                 <pre className="max-h-40 overflow-y-auto mt-1 border p-2 text-xs">
                   <code>
-                    {JSON.stringify(state.context.syncError!, null, 2)}
+                    {JSON.stringify(state.context.unknownError!, null, 2)}
                   </code>
                 </pre>
               )}

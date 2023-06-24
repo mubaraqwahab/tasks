@@ -99,7 +99,9 @@ export const paginatorMachine = createMachine(
           }
         );
 
-        console.log({ page, response });
+        if (import.meta.env.DEV) {
+          console.log({ page, response });
+        }
         const pageProps = response.data.props;
         return pageProps[context.pagePropKey]!;
       },
@@ -113,5 +115,5 @@ function getInertiaPage(): ReturnType<typeof usePage> {
 
 if (import.meta.env.DEV) {
   // @ts-ignore
-  window.getInertiaPage = getInertiaPage;
+  window.$getInertiaPage = getInertiaPage;
 }

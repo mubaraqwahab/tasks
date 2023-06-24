@@ -100,11 +100,12 @@ function DeleteAccountSection({ className }: { className?: string }) {
   const { user } = useAuth()!;
   const { post, processing } = useForm({});
 
-  const handleDelete = p(() => {
+  const handleDelete = (e: FormEvent) => {
+    e.preventDefault();
     post(route("account.destroy"), {
       preserveScroll: true,
     });
-  });
+  };
 
   return (
     <section className={className}>

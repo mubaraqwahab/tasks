@@ -2,7 +2,7 @@ import { createMachine, assign, ActorRefFrom, spawn } from "xstate";
 import { Task, TaskChange } from "@/types/models";
 import axios, { AxiosError } from "axios";
 import { useMachine } from "@xstate/react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Paginator } from "../types";
 import { paginatorMachine } from "./task-paginator";
 import { useOnline } from "@/utils";
@@ -91,7 +91,7 @@ export function createTasksMachine(
               },
             },
             afterSyncing: {
-              entry: ["updateChangelogWithSyncResult", "resetAutoRetryCount"],
+              entry: "updateChangelogWithSyncResult",
               always: [
                 {
                   target: "#taskManager.someFailedToSync",
@@ -103,21 +103,13 @@ export function createTasksMachine(
               ],
             },
             passiveError: {
-              after: {
-                "10000": {
-                  target: "#taskManager.normal.beforeSyncing",
-                  cond: "maxAutoRetryCountNotReached",
-                  actions: ["incrementAutoRetryCount"],
-                  internal: false,
-                },
-              },
               initial: "network",
               states: {
                 network: {},
                 server: {},
                 unknown: {
-                  entry: "setError",
-                  exit: "clearError",
+                  entry: "setUnknownError",
+                  exit: "clearUnknownError",
                 },
               },
               on: {
@@ -164,8 +156,7 @@ export function createTasksMachine(
         context: {} as {
           tasks: Task[];
           changelog: TaskChange[];
-          autoRetryCount: number;
-          syncError: AxiosError | null;
+          unknownError: AxiosError | null;
           upcomingPaginatorRef: PaginatorRef | null;
           completedPaginatorRef: PaginatorRef | null;
         },
@@ -196,8 +187,7 @@ export function createTasksMachine(
       context: {
         tasks: upcomingPaginator.data.concat(completedPaginator.data),
         changelog: getOfflineChangelog(),
-        autoRetryCount: 0,
-        syncError: null,
+        unknownError: null,
         upcomingPaginatorRef: null,
         completedPaginatorRef: null,
       },
@@ -261,18 +251,12 @@ export function createTasksMachine(
         reload: () => {
           window.location.reload();
         },
-        resetAutoRetryCount: assign({ autoRetryCount: 0 }),
-        incrementAutoRetryCount: assign({
-          autoRetryCount(context) {
-            return context.autoRetryCount + 1;
-          },
-        }),
-        setError: assign({
-          syncError(_, event) {
+        setUnknownError: assign({
+          unknownError(_, event) {
             return event.data as AxiosError;
           },
         }),
-        clearError: assign({ syncError: null }),
+        clearUnknownError: assign({ unknownError: null }),
         spawnPaginatorMachines: assign({
           upcomingPaginatorRef() {
             return spawn(
@@ -308,7 +292,6 @@ export function createTasksMachine(
           (event.data as AxiosError).code === "ERR_BAD_RESPONSE"
         ),
         isOnline: () => navigator.onLine,
-        maxAutoRetryCountNotReached: (context) => context.autoRetryCount < 2,
       },
       services: {
         async syncChangelog(context) {
@@ -375,7 +358,7 @@ export function useTasksMachine(
   upcomingPaginator: Paginator<Task>,
   completedPaginator: Paginator<Task>
 ) {
-  const [state, send, ...rest] = useMachine(() =>
+  const [state, send, actor] = useMachine(() =>
     createTasksMachine(upcomingPaginator, completedPaginator)
   );
 
@@ -396,29 +379,24 @@ export function useTasksMachine(
     // NOTE: this sends an (unnecessary) online event on the first render.
     // If that's ever a problem, you can avoid sending on the first render.
     send({ type: isOnline ? "online" : "offline" });
-    console.log("Event sent:", isOnline ? "online" : "offline");
   }, [isOnline]);
 
   // For debugging
   useEffect(() => {
     // @ts-ignore
-    window.$state = state;
-    // @ts-ignore
-    window.$send = send;
+    window.$tasksActor;
     return () => {
       // @ts-ignore
-      delete window.$state;
-      // @ts-ignore
-      delete window.$send;
+      delete window.$tasksActor;
     };
-  }, [state, send]);
+  }, [actor]);
 
-  return [state, send, ...rest] as ReturnType<
+  return [state, send, actor] as ReturnType<
     typeof useMachine<ReturnType<typeof createTasksMachine>>
   >;
 }
 
 if (import.meta.env.DEV) {
   // @ts-ignore
-  window.getOfflineChangelog = getOfflineChangelog;
+  window.$getOfflineChangelog = getOfflineChangelog;
 }
