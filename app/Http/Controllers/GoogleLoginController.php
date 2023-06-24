@@ -31,7 +31,8 @@ class GoogleLoginController extends Controller
                 "email" => $googleUser->getEmail(),
             ]);
             $user->markEmailAsVerified();
-            event(new Registered($user));
+            // TODO: uncomment this when you fix email!
+            // event(new Registered($user));
             event(new Verified($user));
         }
 
