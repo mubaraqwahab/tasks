@@ -1,11 +1,12 @@
 import { useForm, usePage } from "@inertiajs/react";
 import { Transition } from "@headlessui/react";
-import { p, useAuth } from "@/utils";
+import { useAuth } from "@/utils";
 import Layout from "@/Components/Layout";
 import * as Form from "@radix-ui/react-form";
 import clsx from "clsx";
 import MyForm from "@/Components/MyForm";
 import { PageProps } from "@/types";
+import { FormEvent } from "react";
 
 type AccountPageProps = PageProps<{
   status?: string;
@@ -27,9 +28,10 @@ function UpdateProfileSection({ className }: { className?: string }) {
   const { data, setData, patch, errors, processing, recentlySuccessful } =
     useForm({ name: user.name });
 
-  const handleSubmit = p(() => {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
     patch(route("account.update"), { preserveScroll: true });
-  });
+  };
 
   return (
     <section className={className}>
