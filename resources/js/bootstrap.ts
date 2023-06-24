@@ -12,10 +12,11 @@ axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 // Credit: https://dev.to/grantholle/better-csrf-refreshing-in-laravel-and-axios-177c
 axios.interceptors.response.use(undefined, async (error: AxiosError) => {
   if (error.response?.status === 419) {
-    console.log("Refreshing expired session");
     await axios.get(route("sanctum.csrf-cookie"));
-    console.log("Session refreshed");
     return axios(error.response.config);
+  } else if (error.response?.status === 409) {
+    // See https://inertiajs.com/the-protocol#asset-versioning
+    window.location.reload();
   }
   throw error;
 });
