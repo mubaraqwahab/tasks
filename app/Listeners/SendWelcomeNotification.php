@@ -4,6 +4,8 @@ namespace App\Listeners;
 
 use App\Notifications\WelcomeNotification;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SendWelcomeNotification
 {
@@ -17,6 +19,11 @@ class SendWelcomeNotification
          */
         $user = $event->user;
 
-        $user->notify(new WelcomeNotification());
+        // TODO: remove the try-catch when you fix email!
+        try {
+            $user->notify(new WelcomeNotification());
+        } catch (Throwable $e) {
+            Log::error($e->getMessage());
+        }
     }
 }

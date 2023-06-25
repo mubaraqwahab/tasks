@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -32,14 +33,14 @@ class WelcomeNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(User $user): MailMessage
     {
         $appName = config("app.name");
         $aboutRoute = route("about");
         $myTasksRoute = route("tasks.index");
         return (new MailMessage())
             ->subject("Welcome to $appName")
-            ->greeting("Hello {$notifiable->name}")
+            ->greeting("Hello {$user->name}")
             ->line("Welcome to $appName.")
             ->line(
                 "Tasks is a simple to-do list app that I'm using to explore

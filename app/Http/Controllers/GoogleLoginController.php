@@ -8,7 +8,9 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class GoogleLoginController extends Controller
 {
@@ -21,9 +23,7 @@ class GoogleLoginController extends Controller
     {
         $googleUser = Socialite::driver("google")->user();
 
-        $user = User::query()
-            ->where("email", $googleUser->getEmail())
-            ->first();
+        $user = User::query()->firstWhere("email", $googleUser->getEmail());
 
         if (!$user) {
             $user = User::query()->create([
@@ -31,8 +31,7 @@ class GoogleLoginController extends Controller
                 "email" => $googleUser->getEmail(),
             ]);
             $user->markEmailAsVerified();
-            // TODO: uncomment this when you fix email!
-            // event(new Registered($user));
+            event(new Registered($user));
             event(new Verified($user));
         }
 
