@@ -30,6 +30,7 @@ class TaskChangeController extends Controller
     {
         try {
             $change = $this->validateChange($change);
+            $change["user_id"] = $request->user()->id;
 
             if (TaskChange::find($change["id"])) {
                 return ["type" => "duplicate"];
