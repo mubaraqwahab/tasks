@@ -20,7 +20,7 @@ processes = []
   DB_HOST = "mubaraqwahab-tasks-mysql.internal"
   DB_DATABASE = "tasks"
   SANCTUM_STATEFUL_DOMAINS = "tasks.mubaraqwahab.com,mubaraqwahab-tasks.fly.dev"
-  MAIL_MAILER = "mailgun"
+  MAIL_MAILER = "postmark"
   MAIL_FROM_ADDRESS = "noreply@tasks.mubaraqwahab.com"
   MAIL_FROM_NAME = "Tasks"
 

@@ -168,10 +168,15 @@ export default function Tasks({
                 "border border-gray-400 block w-full rounded-lg pl-3 pr-11 py-2 shadow",
                 "[&:placeholder-shown+label]:inline-block [&:not(:placeholder-shown)+label]:hidden"
               )}
-              placeholder=" "
+              placeholder="​"
             />
-            {/* placeholder=" " is required above for :placeholder-shown to work */}
-            <Form.Label className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">
+            {/* Note that the placeholder above is a zero-width space.
+              The placeholder must have a non-empty-string value for :placeholder-shown to work.
+              I could've used a space (" ") as the value instead, but for some reason, the space
+              would be selectable when you press Ctrl+A, for example (on MS Edge at least), and
+              I don't want that.
+            */}
+            <Form.Label className="absolute inset-x-3 top-1/2 -translate-y-1/2 pointer-events-none select-none text-gray-600">
               Add a new task
             </Form.Label>
           </Form.Field>

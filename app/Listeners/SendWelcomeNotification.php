@@ -19,7 +19,7 @@ class SendWelcomeNotification
          */
         $user = $event->user;
 
-        // TODO: remove the try-catch when you fix email!
+        // TODO: remove the try-catch when you setup queues for email!
         try {
             $user->notify(new WelcomeNotification());
         } catch (Throwable $e) {
