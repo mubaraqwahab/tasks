@@ -7,53 +7,56 @@ export default function About() {
   return (
     <>
       <Head title="About" />
-      <header className="border-b bg-white">
-        <div className="container flex justify-between items-center py-2">
-          <Link href="/" className="font-medium text-lg">
-            Tasks
-          </Link>
-
-          {auth ? (
-            <Link
-              href={route("tasks.index")}
-              className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
-            >
-              Open Tasks
-            </Link>
-          ) : (
-            <a
-              href={route("login.google")}
-              className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
-            >
-              Continue with Google
-            </a>
-          )}
-        </div>
-      </header>
       <main>
         <div
           className={clsx(
             "container max-w-2xl pt-12 pb-16",
+            "lg:prose-lg lg:pt-16 lg:pb-16",
             "prose prose-a:underline-offset-2",
-            "lg:prose-lg lg:pt-8 lg:pb-10"
+            "prose-h1:tracking-tight prose-h1:mb-0"
           )}
         >
-          <h1>Tasks</h1>
-          <p className="lead">
-            A simple to-do list app with an optimistic UI, inspired by{" "}
-            <a href="https://todoist.com/">Todoist</a>.
-          </p>
+          <div className="">
+            <h1>Tasks</h1>
+            <p className="lead">
+              A simple to-do list app with an optimistic UI, built by{" "}
+              <a href="https://mubaraqwahab.com/">Mubaraq</a>.
+            </p>
 
-          {/* <p>
-            <img alt="A screenshot of the My tasks page" />
-          </p> */}
+            <p className="not-prose">
+              {auth ? (
+                <Link
+                  href={route("tasks.index")}
+                  className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                >
+                  Open Tasks
+                </Link>
+              ) : (
+                <a
+                  href={route("login.google")}
+                  className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                >
+                  Continue with Google
+                </a>
+              )}
+            </p>
+
+            <p>
+              <img
+                alt="A screenshot of the My tasks page"
+                className="aspect-video border"
+              />
+            </p>
+          </div>
+
+          <hr />
 
           <p>
             When you're logged in, you can do the usual to-do list
             stuff&mdash;create, edit, complete, uncomplete and delete
             tasks&mdash;and you'll see the results immediately, without having
             to wait for your changes to be sent to the server (i.e. without
-            waiting for any "loading..." sign).
+            waiting for any "loading..." signs).
           </p>
 
           <p>
@@ -97,9 +100,12 @@ export default function About() {
           <p>
             Learning from that experience, I built this app with{" "}
             <a href="http://laravel.com/">Laravel</a>. Laravel is a full-stack
-            PHP framework with many built-in features and conventions to handle
-            all the backend work I listed above (and more) with little manual
-            configuration.
+            PHP framework with a{" "}
+            <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">
+              model-view-controller (MVC) architecture
+            </a>{" "}
+            and many built-in features and conventions to handle all the backend
+            work I listed above (and more) with little manual configuration.
           </p>
 
           <p>
@@ -118,31 +124,57 @@ export default function About() {
 
           <p>
             The app currently lacks many utility features like sorting and
-            filtering tasks and setting task deadlines. I plan to them over time
-            to practise iterative development.
+            filtering tasks and deleting user accounts. I plan to add them over
+            time to practise iterative development.
           </p>
 
           <p>
-            The rest of this page describes some interesting challenges I faced
-            while developing this app, as well as lessons I learnt.
+            The rest of this page describes how I built some interesting parts
+            of this app as well as some challenges I faced and lessons I learnt.
           </p>
 
-          <h2>Challenges and lessons learned</h2>
-          <p>TODO</p>
+          <p>TODO: credits here?</p>
+
+          <p>TODO: TOC here?</p>
+
+          {/* TODO: heading IDs */}
+          <h2>The optimistic UI</h2>
+
+          <p>
+            The most exciting feature to build was the optimistic UI, even
+            though, ironically, the idea for it only came halfway into the app.
+            My initial plan was to create a traditional server-rendered app,
+            where actions like adding a new task would trigger a page reload to
+            save the task to the server and show the task on the page. Soon
+            after completing this, I found the user experience to be terrible,
+            so I decided to improve it with a Todoist-style optimistic UI.
+          </p>
+
+          <p>
+            TODO: reverse engineering Todoist's optimistic UI... How my
+            implementation is a modified form of Todoist's... (Maybe add this to
+            the previous paragraph?)
+          </p>
+
+          <p>TODO: Overview of my implementation (end to end)</p>
+
+          <p>Related stuff</p>
           <ul>
+            <li>UUIDs for task (and change?) IDs</li>
+            <li>
+              Switcing from Blade to Inertia to reuse server components on front
+              end and for reactive UI
+            </li>
+            <li>How seemingly trivial features invite complexity</li>
+          </ul>
+
+          <hr />
+          <ul>
+            <li>The optimistic UI</li>
             <li>Declarative, reactive UI...</li>
-            <li>Web apps as distributed systems; CRDTs and CQRS</li>
             <li>Interface design</li>
             <li>Scoping requirements...</li>
-            <li>Accessibility in inertia</li>
-            <li>
-              How seemingly simple features invite complexity: e.g. optimistic
-              UI.... Were it not for the optimistic UI requirement I placed on
-              the frontend, I wouldn't have needed Inertia at all; Livewire
-              would have sufficed me... Mention that you'd love to see a
-              simpler, conventional solution to implementing optimistic UIs in
-              laravel
-            </li>
+            <li>Accessibility in Inertia</li>
           </ul>
         </div>
       </main>
