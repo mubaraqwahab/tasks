@@ -26,7 +26,7 @@ Route::get("/", function (Request $request) {
     }
 });
 
-Route::view("/about", "about");
+Route::view("/about", "about")->name("about");
 
 Route::middleware(["auth", "verified"])->group(function () {
     Route::resource("tasks", TaskController::class)->only([
