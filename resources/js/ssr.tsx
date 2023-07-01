@@ -3,6 +3,7 @@ import { createInertiaApp } from "@inertiajs/react";
 import createServer from "@inertiajs/react/server";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import route from "../../vendor/tightenco/ziggy/dist/index.m";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 const appName = "Laravel";
 
@@ -25,7 +26,11 @@ createServer((page) =>
           location: new URL(page.props.ziggy.location),
         });
 
-      return <App {...props} />;
+      return (
+        <Tooltip.Provider>
+          <App {...props} />
+        </Tooltip.Provider>
+      );
     },
   })
 );
