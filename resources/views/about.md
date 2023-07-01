@@ -16,13 +16,13 @@ I also followed [Todoist](https://todoist.com/), a popular task manager app, in 
 
 - Laravel for the overall architecture and backend heavy lifting
 - MySQL for the database
-- Postmark for sending transactional emails
-- TypeScript for type safety in the client-side code
+- [Postmark](http://postmarkapp.com/) for sending transactional emails
+- [TypeScript](https://www.typescriptlang.org/) for type safety in the client-side code
 - Inertia + React for a declarative and reactive UI
 - XState for managing UI state
-- Tailwind CSS for styling
-- Radix UI for accessible UI components
-- Heroicons for icons
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+- [Radix UI](https://www.radix-ui.com/) for accessible UI components
+- [Heroicons](https://heroicons.com/) for icons
 
 The app currently lacks many utility features like sorting and filtering tasks and deleting user accounts. I plan to add them over time to practise iterative development.
 
@@ -68,7 +68,7 @@ Before the optimistic UI, I used Laravel's Blade templating engine to render the
 - Reusing components created on the server (via Blade) on the client side
 - Expressing the logic of creating/deleting/modifying DOM nodes in response to user actions and server responses.
 
-How seemingly trivial features invite complexity
+Sth about how seemingly trivial features invite complexity...
 
 ## Miscellaneous
 
