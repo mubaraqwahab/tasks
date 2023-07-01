@@ -26,9 +26,7 @@ Route::get("/", function (Request $request) {
     }
 });
 
-Route::get("/about", function () {
-    return Inertia::render("About");
-})->name("about");
+Route::view("/about", "about");
 
 Route::middleware(["auth", "verified"])->group(function () {
     Route::resource("tasks", TaskController::class)->only([

@@ -43,7 +43,7 @@ export default function About() {
 
             <p>
               <img
-                alt="A screenshot of the My tasks page"
+                alt="A screenshot of the My tasks page of the app."
                 className="aspect-video border"
               />
             </p>
@@ -63,8 +63,11 @@ export default function About() {
             The app assumes your changes will sync successfully with the server
             most of the time, so it doesn't wait for them to sync. Instead, it
             saves them locally and updates the UI before attempting (in the
-            background) to send them to the server. Hence the "optimistic UI",
-            which enables a seamless user experience. In the (hopefully) rare
+            background) to send them to the server. Hence the{" "}
+            <a href="https://www.smashingmagazine.com/2016/11/true-lies-of-optimistic-user-interfaces/">
+              "optimistic UI"
+            </a>
+            , which enables a seamless user experience. In the (hopefully) rare
             event that your changes fail to sync, the app notifies you of that
             and guides you to resolve the issue.
           </p>
@@ -115,12 +118,29 @@ export default function About() {
             UI idea from there and used <a href="http://react.dev/">React</a>{" "}
             (via Laravel's <a href="https://inertiajs.com/">Inertia</a>) and{" "}
             <a href="https://xstate.js.org/docs/">XState</a> on the front end to
-            manage the resulting complexity.{" "}
+            manage the resulting complexity.
+          </p>
+
+          <p>
             <a href="https://github.com/mubaraqwahab/tasks">
               The source code is available on my GitHub
             </a>
-            .
+            , and the tech stack is as follows:
           </p>
+
+          <ul>
+            <li>
+              Laravel for the overall architecture and backend heavy lifting
+            </li>
+            <li>MySQL for the database</li>
+            <li>Postmark for sending transactional emails</li>
+            <li>TypeScript for type safety in the client-side code</li>
+            <li>Inertia + React for a declarative and reactive UI</li>
+            <li>XState for managing UI state</li>
+            <li>Tailwind CSS for styling</li>
+            <li>Radix UI for accessible UI components</li>
+            <li>Heroicons for icons</li>
+          </ul>
 
           <p>
             The app currently lacks many utility features like sorting and
