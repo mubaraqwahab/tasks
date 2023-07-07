@@ -17,6 +17,8 @@ I also followed [Todoist](https://todoist.com/), a popular task manager app, in 
 - Laravel for the overall architecture and backend heavy lifting
 - MySQL for the database
 - [Postmark](http://postmarkapp.com/) for sending transactional emails
+- [Fly](https://fly.io) for hosting
+- [GitHub Actions](https://github.com/features/actions) for continuous deployment
 - [TypeScript](https://www.typescriptlang.org/) for type safety in the client-side code
 - Inertia + React for a declarative and reactive UI
 - XState for managing UI state
