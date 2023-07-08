@@ -4,6 +4,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { TASK_CHANGELOG_STORAGE_KEY, useAuth } from "@/utils";
+import DetachedFormButton from "./DetachedFormButton";
 
 type LayoutProps = PropsWithChildren<{
   title: string;
@@ -73,19 +74,24 @@ function AccountDropdownMenu() {
             <Link href={route("account.edit")}>Account</Link>
           </DropdownMenu.Item>
 
-          <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
+          <DropdownMenu.Item
+            asChild
+            className={dropdownMenuItemClass}
+            // On click, don't close the dropdown, so that the form button
+            // (and form) remain mounted and the form gets submitted.
+            onSelect={(e) => e.preventDefault()}
+          >
             {/* TODO: icon */}
-            <Link
-              href={route("logout")}
-              method="post"
-              as="button"
-              onBefore={() => {
+            <DetachedFormButton
+              formAction={route("logout")}
+              formMethod="POST"
+              onClick={() => {
                 // TODO: this is suboptimal
                 localStorage.removeItem(TASK_CHANGELOG_STORAGE_KEY);
               }}
             >
               Log out
-            </Link>
+            </DetachedFormButton>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
