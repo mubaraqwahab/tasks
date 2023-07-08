@@ -44,9 +44,52 @@ The most exciting feature to build was the optimistic UI, even though, ironicall
 
 The optimistic UI in this app is based on my observations while reverse-engineering Todoist in my browser's DevTools. It works thus:
 
+When you make a change to your tasks, the app records the change in a "changelog" array and updates the UI. For example, when you add a new task "Do your laundry", the app records the following change in the changelog:
+
+```jsonc
+{
+  // An auto-generated ID for the change
+  "id": "34e85d49-e406-411e-bc38-aee45fe1449d",
+  // The time you made the change
+  "created_at": "2023-07-08T14:11:17.210Z",
+  // The type of change you made
+  "type": "create",
+  // An auto-generated ID for the new task
+  "task_id": "2b461556-515f-4244-9884-21c39691b6dc",
+  // The name of the new task
+  "task_name": "Do your laundry"
+}
+```
+
+And when you complete an existing task "Make dinner", the app records the following change:
+
+```jsonc
+{
+  "id": "67edf7bc-89a5-4db6-82b0-e57a66fdc897",
+  "created_at": "2023-07-08T14:12:41.568Z",
+  "type": "complete",
+  // The ID of the task you completed
+  "task_id": "df37872e-5e73-47c9-8d88-a287062e7af4"
+}
+```
+
+If you're online, the app then proceeds to sync the changelog to the server. While this is happening, the app continues to record any new changes you make in the changelog (and updating the UI accordingly), but it waits for the current sync to succeed before syncing the newer changes.
+
+If you're offline, the app doesn't try to sync the changelog, since that will fail. Instead, it continues recording any new changes you make, while waiting for you to go back online. And when you return online, it proceeds to sync.
+
+[TODO: perhaps this paragraph should come later?] Whether or not you're offline, the app maintains a backup of the changelog in your browser's local storage, so that when you close the app, you don't lose any of your changes that are yet to sync.
+
+The server's response to a sync request looks like this:
+
+```jsonc
+Sample response
+```
+
+---
+
 On the client side:
 
-- The app saves changes in an array (which I call a changelog) in local storage and updates the UI. [Sample changelog]
+- The app saves changes in a changelog array in local storage and updates the UI. [Sample changelog]
 - The app attempts to sync the changelog to the server if you're online.
 - If you're offline, then the app waits until you're back online to sync. In the meantime, it continues pushing any new changes you make to the changelog and updating the UI.
 - The server's response to a sync request typically looks thus: [Sample response]. On receiving this, the app removes those ok changes from the changelog.
