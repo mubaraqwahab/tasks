@@ -60,11 +60,11 @@ function UpdateProfileSection({ className }: { className?: string }) {
             {errors.name && <Form.Message>{errors.name}</Form.Message>}
           </Form.Field>
 
-          <Form.Field name="email">
+          <Form.Field name="email" className="opacity-50">
             <Form.Label>Email</Form.Label>
             <Form.Control
               type="email"
-              className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm opacity-50 cursor-not-allowed"
+              className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm cursor-not-allowed"
               defaultValue={user.email}
               disabled
             />
