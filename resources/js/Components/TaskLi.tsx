@@ -93,6 +93,7 @@ export default function TaskLi({
             <Dialog.Trigger
               type="button"
               aria-label="Edit"
+              aria-describedby={taskNameElementId}
               className="p-1 rounded-md hover:bg-gray-100"
             >
               <PencilIcon aria-hidden="true" className="w-3.5 h-3.5" />
@@ -168,6 +169,7 @@ export default function TaskLi({
           <Dialog.Trigger
             type="button"
             aria-label="Delete"
+            aria-describedby={taskNameElementId}
             className="p-1 rounded-md hover:bg-gray-100"
           >
             <TrashIcon aria-hidden="true" className="w-3.5 h-3.5" />
