@@ -73,33 +73,35 @@ And when you complete an existing task "Make dinner", the app records the follow
 }
 ```
 
+Note that the `id` and `task_id` properties are random [UUIDs (universally unique identifiers)](https://en.wikipedia.org/wiki/Universally_unique_identifier), so they don't clash with those that might be generated on other devices. I learnt UUIDs are designed to have a negligible chance of collision even when generated on different devices.
+
 If you're online, the app then proceeds to sync the changelog to the server. While this is happening, the app continues to record any new changes you make in the changelog (and updating the UI accordingly), but it waits for the current sync to succeed before syncing the newer changes.
 
 If you're offline, the app doesn't try to sync the changelog, since that will fail. Instead, it continues recording any new changes you make, while waiting for you to go back online. And when you return online, it proceeds to sync.
 
-[TODO: perhaps this paragraph should come later?] Whether or not you're offline, the app maintains a backup of the changelog in your browser's local storage, so that when you close the app, you don't lose any of your changes that are yet to sync.
+Whether or not you're offline, the app maintains a backup of the changelog in your browser's local storage, so that when you close the app, you don't lose any of your changes that are yet to sync.
 
-The server's response to a sync request includes a `syncStatus` object describing the "sync status" of each change in the request. For example, the following response indicates that the changes with IDs `2b461556-515f-4244-9884-21c39691b6dc` and `df37872e-5e73-47c9-8d88-a287062e7af4` synced successfully.
+The server's response to a sync request includes a `syncStatus` object describing the "sync status" of each change in the request. For example, the following response indicates that the changes with IDs `34e85...` and `a691c...` synced successfully.
 
 ```jsonc
 {
   "syncStatus": {
-    "2b461556-515f-4244-9884-21c39691b6dc": {
+    "34e85d49-e406-411e-bc38-aee45fe1449d": {
       "type": "ok"
     },
-    "df37872e-5e73-47c9-8d88-a287062e7af4": {
+    "a691c5b3-f686-432d-8a7a-066f80ec4c80": {
       "type": "ok"
     }
   }
 }
 ```
 
-While the following response indicates that the change with ID `a691c5b3-f686-432d-8a7a-066f80ec4c80` failed to sync for the reason specified in the `error` property.
+While the following response indicates that the change with ID `67edf...` failed to sync for the reason specified in the `error` property.
 
 ```jsonc
 {
   "syncStatus": {
-    "a691c5b3-f686-432d-8a7a-066f80ec4c80": {
+    "67edf7bc-89a5-4db6-82b0-e57a66fdc897": {
       "type": "error",
       "error": "No task exists with the given task id"
     },
@@ -110,30 +112,34 @@ While the following response indicates that the change with ID `a691c5b3-f686-43
 }
 ```
 
-On receiving a response, the app removes the successful changes (if any) from the changelog to avoid resending them on the next sync.
+On receiving a response, the app removes the successful changes (if any) from the changelog to avoid resending them on the next sync. The app also augments the failed changes (if any) with their respective errors, so the change `67edf...` gets updated thus in the changelog:
 
-[anchor](#0)
+```jsonc
+{
+  "id": "67edf7bc-89a5-4db6-82b0-e57a66fdc897",
+  "created_at": "2023-07-08T14:12:41.568Z",
+  "type": "complete",
+  "task_id": "df37872e-5e73-47c9-8d88-a287062e7af4",
+  "error": "No task exists with the given task id"
+}
+```
 
----
+Then, if there are failed changes, the app interrupts you with a dialog prompting you to discard the failed changes:
 
-On the client side:
+![A screenshot of the sync conflict dialog](img)
 
-- The app saves changes in a changelog array in local storage and updates the UI. [Sample changelog]
-- The app attempts to sync the changelog to the server if you're online.
-- If you're offline, then the app waits until you're back online to sync. In the meantime, it continues pushing any new changes you make to the changelog and updating the UI.
-- The server's response to a sync request typically looks thus: [Sample response]. On receiving this, the app removes those ok changes from the changelog.
-- In the event that there's a sync conflict or validation error, the server responds thus: [Sample response]. And the app keeps the failed changes in the changelog, updates them thus: [Updated changelog]. Then the app alerts you: [Screenshot of alert dialog]. A sync conflict could occur if, say, you're using multiple devices, like your phone and laptop, to access the app, and the following sequence of events occur: [Sequence of events on phone and laptop]
-- Other errors can (could?) occur during a sync: e.g. a network error or a server error. The app subtly notifies you of these and gives you the option to retry syncing.
+A change may fail due to a race condition, such as when you're using the app on two devices&mdash;say your phone and laptop&mdash;and the following sequence of events occur:
 
-On the server side:
+1. You go offline on your phone.
+2. You mark the task "Make dinner" as completed on your phone.
+3. You delete the same task "Make dinner" on your laptop while online.
+4. You go online on your phone (and the app attempts to sync your offline change).
 
-- The app validates each change in the received changelog, saves the change to a `task_changes` database table and applies the change to a `tasks` table, where the tasks live. It does the latter two in a transaction to avoid inconsistencies when either fails (e.g. due to a sync conflict.)
-- Then the server responds with a relevant result, as previously described.
+When the offline change from your phone reaches the server, the "Make dinner" task has already been deleted, so the server cannot apply the change.
 
-Some important, finer points:
+A sync conflict of this sort isn't the only possible sync error though. A network error might occur while the app is syncing, or the server might respond with a non-200 status code (e.g. a 500). In either case, the app subtly notifies you of the error and gives you the option to retry syncing:
 
-- The ids of the tasks and changes are UUIDs to ensure they never clash when generated on different devices. I learnt UUIDs are designed such that no device ever generates the same UUID twice, and no two devices ever generate the same UUID. (I also learnt that UUIDs _do_ clash in some situations, but that's beyond the scope of this writing.)
-- The changes are persisted server-side just to prevent duplicates. In some situations, the client may send the same changes twice to the server. The changes aren't all idempotent, so the server persists them to identify and avoid re-applying duplicate changes. The response for duplicate changes is [Sample response]. The client treats these results as it does ok results.
+![A screenshot of the subtle sync error](img)
 
 ## Switching to Inertia
 
