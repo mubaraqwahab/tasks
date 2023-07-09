@@ -4,7 +4,7 @@ The app assumes your changes will sync successfully with the server most of the 
 
 ---
 
-I started this to explore building a minimal, production-worthy full-stack app. By "production-worthy", I mean (1) an app that implements relevant business logic (such as managing tasks) as well as necessary peripheral concerns (such as transactional emails), (2) an app that is resilient to exceptions, and (3) an app with a reliable, scalable architecture.
+I started this to explore building a minimal production-worthy full-stack app. By "production-worthy", I mean (1) an app that implements relevant business logic (such as managing tasks) as well as necessary peripheral concerns (such as transactional emails), (2) an app that is resilient to exceptions, and (3) an app with a reliable, scalable architecture.
 
 The last time I tried building a similar app, I naively used a very low-level framework ([Express](https://expressjs.com/)) and had to manually set up authentication, session management, emails, input validation and security measures among other backend concerns, which I knew little about. As a result, the app was very fragile and the codebase untidy.
 
@@ -79,11 +79,40 @@ If you're offline, the app doesn't try to sync the changelog, since that will fa
 
 [TODO: perhaps this paragraph should come later?] Whether or not you're offline, the app maintains a backup of the changelog in your browser's local storage, so that when you close the app, you don't lose any of your changes that are yet to sync.
 
-The server's response to a sync request looks like this:
+The server's response to a sync request includes a `syncStatus` object describing the "sync status" of each change in the request. For example, the following response indicates that the changes with IDs `2b461556-515f-4244-9884-21c39691b6dc` and `df37872e-5e73-47c9-8d88-a287062e7af4` synced successfully.
 
 ```jsonc
-Sample response
+{
+  "syncStatus": {
+    "2b461556-515f-4244-9884-21c39691b6dc": {
+      "type": "ok"
+    },
+    "df37872e-5e73-47c9-8d88-a287062e7af4": {
+      "type": "ok"
+    }
+  }
+}
 ```
+
+While the following response indicates that the change with ID `a691c5b3-f686-432d-8a7a-066f80ec4c80` failed to sync for the reason specified in the `error` property.
+
+```jsonc
+{
+  "syncStatus": {
+    "a691c5b3-f686-432d-8a7a-066f80ec4c80": {
+      "type": "error",
+      "error": "No task exists with the given task id"
+    },
+    "865dde4e-8d87-4a7c-963e-449159ef361c": {
+      "type": "ok"
+    }
+  }
+}
+```
+
+On receiving a response, the app removes the successful changes (if any) from the changelog to avoid resending them on the next sync.
+
+[anchor](#0)
 
 ---
 

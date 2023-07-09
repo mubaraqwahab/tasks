@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head } from "@inertiajs/react";
 import { PropsWithChildren, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
@@ -11,27 +11,16 @@ type LayoutProps = PropsWithChildren<{
 }>;
 
 export default function Layout({ title, children }: LayoutProps) {
-  const auth = useAuth();
-
   return (
     <>
       <Head title={title} />
       <header className="border-b bg-white">
         <div className="container flex justify-between items-center py-2">
-          <Link href={route("tasks.index")} className="font-medium text-lg">
+          <a href={route("tasks.index")} className="font-medium text-lg">
             Tasks
-          </Link>
+          </a>
 
-          {auth ? (
-            <AccountDropdownMenu />
-          ) : (
-            <a
-              href={route("login.google")}
-              className="HeaderItem border border-gray-400 font-semibold py-1 text-sm bg-gray-100 hover:bg-gray-200"
-            >
-              Continue with Google
-            </a>
-          )}
+          <AccountDropdownMenu />
         </div>
       </header>
       <main>
@@ -70,8 +59,7 @@ function AccountDropdownMenu() {
           className="w-48 border rounded-md shadow-lg p-1 bg-white"
         >
           <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
-            {/* TODO: icon */}
-            <Link href={route("account.edit")}>Account</Link>
+            <a href={route("account.edit")}>Account</a>
           </DropdownMenu.Item>
 
           <DropdownMenu.Item
@@ -81,7 +69,6 @@ function AccountDropdownMenu() {
             // (and form) remain mounted and the form gets submitted.
             onSelect={(e) => e.preventDefault()}
           >
-            {/* TODO: icon */}
             <DetachedFormButton
               formAction={route("logout")}
               formMethod="POST"

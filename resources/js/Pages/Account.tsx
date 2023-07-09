@@ -80,14 +80,16 @@ function UpdateProfileSection({ className }: { className?: string }) {
             >
               Update profile
             </Form.Submit>
-            <Transition
-              show={recentlySuccessful}
-              enterFrom="opacity-0"
-              leaveTo="opacity-0"
-              className="transition ease-in-out"
-            >
-              <p className="text-sm text-gray-600">Updated.</p>
-            </Transition>
+            <div role="status" aria-live="polite">
+              <Transition
+                show={recentlySuccessful}
+                enterFrom="opacity-0"
+                leaveTo="opacity-0"
+                className="transition ease-in-out"
+              >
+                <p className="text-sm text-gray-600">Updated.</p>
+              </Transition>
+            </div>
           </div>
         </MyForm>
       </Form.Root>
