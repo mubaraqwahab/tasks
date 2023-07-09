@@ -36,7 +36,7 @@ export default function Tasks({
   const discardChangesBtnRef = useRef<HTMLButtonElement>(null);
 
   const failedChanges = state.context.changelog.filter(
-    (change) => !!change.lastError
+    (change) => !!change.error
   );
 
   const tasks = state.context.tasks;
@@ -117,7 +117,7 @@ export default function Tasks({
                 return (
                   <li key={index}>
                     {change.type} task <b>{truncate(taskName, 30)}</b>:{" "}
-                    {change.lastError}
+                    {change.error}
                   </li>
                 );
               })}

@@ -1,6 +1,3 @@
-// Would be nice to be able to auto-generate these types
-// from the Laravel migrations and models
-
 interface Model {
   id: number | string;
   created_at: string; // | null;
@@ -44,5 +41,5 @@ interface BaseTaskChange extends Model {
   id: string;
   type: string;
   task_id: Task["id"];
-  lastError?: string;
+  error?: string;
 }

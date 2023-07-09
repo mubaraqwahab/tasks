@@ -239,13 +239,13 @@ export function createTasksMachine(
               .filter((change) => syncStatus[change.id]?.type === "error")
               .map((change) => ({
                 ...change,
-                lastError: (syncStatus[change.id] as SyncErrorStatus).error,
+                error: (syncStatus[change.id] as SyncErrorStatus).error,
               }));
           },
         }),
         discardFailedChanges: assign({
           changelog(context) {
-            return context.changelog.filter((change) => !change.lastError);
+            return context.changelog.filter((change) => !change.error);
           },
         }),
         reload: () => {
@@ -284,7 +284,7 @@ export function createTasksMachine(
       guards: {
         changelogIsNotEmpty: (context) => !!context.changelog.length,
         changelogContainsFailedChanges: (context) =>
-          context.changelog.some((change) => !!change.lastError),
+          context.changelog.some((change) => !!change.error),
         isNetworkError: (_, event) =>
           (event.data as AxiosError).code === "ERR_NETWORK",
         isServerError: (_, event) => (
