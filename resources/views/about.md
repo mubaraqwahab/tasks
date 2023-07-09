@@ -40,7 +40,7 @@ TODO: TOC here?
 
 ## The optimistic UI
 
-The most exciting feature to build was the optimistic UI, even though, ironically, the idea for it only came halfway into the app. My initial plan was to create a traditional server-rendered app, where actions like adding a new task would trigger a page reload to save the task to the server and show the task on the page. Soon after completing this, I found the user experience to be terrible and decided to improve it with an optimistic UI.
+The most exciting (and most difficult) feature to build was the optimistic UI, even though, ironically, the idea for it only came halfway into the app. My initial plan was to create a traditional server-rendered app, where actions like adding a new task would trigger a page reload to save the task to the server and show the task on the page. Soon after completing this, I found the user experience to be terrible and decided to improve it with an optimistic UI.
 
 The optimistic UI in this app is based on my observations while reverse-engineering Todoist in my browser's DevTools. It works thus:
 
