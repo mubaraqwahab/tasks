@@ -10,9 +10,9 @@ The last time I tried building a similar app, I naively used a very low-level fr
 
 Learning from that experience, I built this app with [Laravel](http://laravel.com/). Laravel is a full-stack PHP framework with a [model-view-controller (MVC) architecture](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) and many built-in features and conventions to handle all the backend work I listed above (and more) with little manual configuration.
 
-I also followed [Todoist](https://todoist.com/), a popular task manager app, in several other design and technical decisions I made for this Tasks app. Notably, I got the optimistic UI idea from there and used [React](http://react.dev/) (via Laravel's [Inertia](https://inertiajs.com/)) and [XState](https://xstate.js.org/docs/) on the front end to manage the resulting complexity.
+I also followed [Todoist](https://todoist.com/), a popular task manager app, in several other design and technical decisions I made for this Tasks app. Notably, I got the optimistic UI idea from there.
 
-[The source code is available on my GitHub](https://github.com/mubaraqwahab/tasks), and the tech stack is as follows:
+[The source code for this app is available on my GitHub](https://github.com/mubaraqwahab/tasks), and the tech stack is as follows:
 
 - Laravel for the overall architecture and backend heavy lifting
 - MySQL for the database
@@ -20,8 +20,8 @@ I also followed [Todoist](https://todoist.com/), a popular task manager app, in 
 - [Fly](https://fly.io) for hosting
 - [GitHub Actions](https://github.com/features/actions) for continuous deployment
 - [TypeScript](https://www.typescriptlang.org/) for type safety in the client-side code
-- Inertia + React for a declarative and reactive UI
-- XState for managing UI state
+- [React](http://react.dev/) (via Laravel's [Inertia](https://inertiajs.com/)) for a declarative and reactive UI
+- [XState](https://xstate.js.org/docs/) for managing UI state
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 - [Radix UI](https://www.radix-ui.com/) for accessible UI components
 - [Heroicons](https://heroicons.com/) for icons
@@ -73,7 +73,7 @@ And when you complete an existing task "Make dinner", the app records the follow
 }
 ```
 
-Note that the `id` and `task_id` properties are random [UUIDs (universally unique identifiers)](https://en.wikipedia.org/wiki/Universally_unique_identifier), so they don't clash with those that might be generated on other devices. I learnt UUIDs are designed to have a negligible chance of collision even when generated on different devices.
+<!-- Note that the `id` and `task_id` properties are random [UUIDs (universally unique identifiers)](https://en.wikipedia.org/wiki/Universally_unique_identifier), so they don't clash with those that might be generated on other devices. I learnt UUIDs are designed to have a negligible chance of collision even when generated on different devices. -->
 
 If you're online, the app then proceeds to sync the changelog to the server. While this is happening, the app continues to record any new changes you make in the changelog (and updating the UI accordingly), but it waits for the current sync to succeed before syncing the newer changes.
 
@@ -112,7 +112,7 @@ While the following response indicates that the change with ID `67edf...` failed
 }
 ```
 
-On receiving a response, the app removes the successful changes (if any) from the changelog to avoid resending them on the next sync. The app also augments the failed changes (if any) with their respective errors, so the change `67edf...` gets updated thus in the changelog:
+On receiving a response, the app removes the successful changes (if any) from the changelog to avoid resending them on the next sync. The app also updates the failed changes (if any) with their respective errors, so the change `67edf...` gets updated thus in the changelog:
 
 ```jsonc
 {
