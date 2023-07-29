@@ -141,11 +141,18 @@ A sync conflict of this sort isn't the only possible sync error though. A networ
 
 ![A screenshot of the subtle sync error](img)
 
+NOTE:
+
+- Changes and tasks are created on different independent devices before syncing to a 'central' server
+- Thus the change ids and task ids generated on each device must be unique across all devices.
+- Thus the random UUIDs.
+- Todoist doesn't do this; each device generates a temporary ID which is (presumably) only unique on that device. The server then creates an actual unique ID and sends a mapping of the temp IDs to actual IDs to the device.
+
 ## Switching to Inertia
 
 Before the optimistic UI, I used Laravel's Blade templating engine to render the frontend of the app on the server, and sprinkles of JS for the interactivity on the client. And I continued thus when I started implementing the optimistic UI. However, I later switched to using React (via Inertia) and XState for two important reasons:
 
-- Reusing components created on the server (via Blade) on the client side
+- Controlling server components on the client side.
 - Expressing the logic of creating/deleting/modifying DOM nodes in response to user actions and server responses.
 
 Sth about how seemingly trivial features invite complexity...
