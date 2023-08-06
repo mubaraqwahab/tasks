@@ -13,13 +13,13 @@
       <div
         class="
           container max-w-2xl pt-12 pb-16
-          prose prose-a:underline-offset-2 prose-h1:tracking-tight prose-h1:mb-0
+          prose prose-a:underline-offset-2 prose-h1:tracking-tight prose-h1:mb-0 prose-pre:border
           lg:prose-lg lg:pt-16 lg:pb-16
         "
       >
         <div class="">
           <h1>Tasks</h1>
-          <p class="lead">A simple to-do list app with an optimistic UI, built by <a href="https://mubaraqwahab.com/">Mubaraq</a>.</p>
+          <p class="lead">A simple to-do list app with an optimistic UI and offline mode, built by <a href="https://mubaraqwahab.com/">Mubaraq</a>.</p>
           <p class="not-prose">
             @auth
               <a
@@ -54,5 +54,23 @@
         {!! $parsedown->text($md) !!}
       </div>
     </main>
+    <script src="https://unpkg.com/shiki"></script>
+    <script>
+      (async function () {
+        const highlighter = await shiki.getHighlighter({
+          theme: "github-dark",
+          langs: ["js", "jsonc"],
+        });
+        const langClassPrefix = "language-";
+        document
+        .querySelectorAll(`pre > code[class*=${langClassPrefix}]`)
+        .forEach((codeBlock) => {
+          const langClass = Array.from(codeBlock.classList).find((c) => c.startsWith(langClassPrefix));
+          const lang = langClass.slice(langClassPrefix.length);
+          const highlighted = highlighter.codeToHtml(codeBlock.textContent, { lang });
+          codeBlock.parentElement.outerHTML = highlighted;
+        });
+      })()
+    </script>
   </body>
 </html>

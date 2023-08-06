@@ -10,7 +10,7 @@ The last time I tried building a similar app, I naively used a very low-level fr
 
 Learning from that experience, I built this app with [Laravel](http://laravel.com/). Laravel is a full-stack PHP framework with a [model-view-controller (MVC) architecture](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) and many built-in features and conventions to handle all the backend work I listed above (and more) with little manual configuration.
 
-I also followed [Todoist](https://todoist.com/), a popular task manager app, in several other design and technical decisions I made for this Tasks app. Notably, I got the optimistic UI idea from there.
+I also followed [Todoist](https://todoist.com/), a popular task manager app, in several other design and technical decisions I made for this Tasks app. Notably, I got the optimistic UI and offline mode ideas from there.
 
 [The source code for this app is available on my GitHub](https://github.com/mubaraqwahab/tasks), and the tech stack is as follows:
 
@@ -40,7 +40,7 @@ TODO: TOC here?
 
 ## The optimistic UI
 
-The most exciting (and most difficult) feature to build was the optimistic UI, even though, ironically, the idea for it only came halfway into the app. My initial plan was to create a traditional server-rendered app, where actions like adding a new task would trigger a page reload to save the task to the server and show the task on the page. Soon after completing this, I found the user experience to be terrible and decided to improve it with an optimistic UI.
+The most exciting (and most difficult) feature to build was the optimistic UI, even though, ironically, the idea for it only came halfway into the app. My initial plan was to create a traditional server-rendered app, where actions like adding a new task would trigger a page reload to save the task to the server and show the task on the page. Soon after completing this, I found the user experience to be terrible and decided to improve it with an offline-first optimistic UI.
 
 The optimistic UI in this app is based on my observations while reverse-engineering Todoist in my browser's DevTools. It works thus:
 
