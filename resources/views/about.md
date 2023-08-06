@@ -30,8 +30,6 @@ The app currently lacks many utility features like sorting and filtering tasks a
 
 The rest of this page describes how I built some interesting parts of this app as well as some challenges I faced and lessons I learnt.
 
-NOTE: everything below this paragraph is still an early draft!
-
 TODO: credits here?
 
 TODO: TOC here?
@@ -141,12 +139,7 @@ A sync conflict of this sort isn't the only possible sync error though. A networ
 
 ![A screenshot of the subtle sync error](img)
 
-NOTE:
-
-- Changes and tasks are created on different independent devices before syncing to a 'central' server
-- Thus the change ids and task ids generated on each device must be unique across all devices.
-- Thus the random UUIDs.
-- Todoist doesn't do this; each device generates a temporary ID which is (presumably) only unique on that device. The server then creates an actual unique ID and sends a mapping of the temp IDs to actual IDs to the device.
+It's worth noting that the IDs of the changes and tasks are random [UUIDs (universally unique identifiers)](https://en.wikipedia.org/wiki/Universally_unique_identifier), as opposed to, say, auto-incrementing integers. The reason for this is that the IDs need to be unique, even as they're generated on different devices (such as your phone and laptop). I learnt UUIDs are suited for this purpose.
 
 ## Switching to Inertia
 
