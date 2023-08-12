@@ -34,7 +34,7 @@ function AccountDropdownMenu() {
   const auth = useAuth()!;
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const dropdownMenuItemClass =
-    "px-2 py-1 block w-full text-left rounded-md hover:bg-gray-100";
+    "px-2 py-1 mx-1 text-left rounded-md hover:bg-gray-100";
 
   return (
     <DropdownMenu.Root
@@ -56,7 +56,7 @@ function AccountDropdownMenu() {
           align="end"
           sideOffset={5}
           loop
-          className="w-48 border rounded-md shadow-lg p-1 bg-white"
+          className="w-48 py-1 border rounded-md shadow-lg bg-white flex flex-col"
         >
           <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
             <a href={route("account.edit")}>Account</a>
@@ -79,6 +79,12 @@ function AccountDropdownMenu() {
             >
               Log out
             </DetachedFormButton>
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Separator className="border-b my-1" />
+
+          <DropdownMenu.Item asChild className={dropdownMenuItemClass}>
+            <a href={route("about")}>About Tasks</a>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
