@@ -221,7 +221,6 @@ export default function Tasks({
             paginatorRef={state.context.completedPaginatorRef!}
             onToggle={handleToggleTask}
             onDelete={handleDeleteTask}
-            fallback={<p>You have no completed tasks.</p>}
           />
         </details>
       )}
@@ -304,7 +303,7 @@ type PaginatedTaskListProps = React.HTMLAttributes<HTMLUListElement> & {
   onToggle?: TaskLiProps["onToggle"];
   onEdit?: TaskLiProps["onEdit"];
   onDelete?: TaskLiProps["onDelete"];
-  fallback: ReactNode;
+  fallback?: ReactNode;
 };
 
 function PaginatedTaskList({
