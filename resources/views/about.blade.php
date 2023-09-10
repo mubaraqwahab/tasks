@@ -13,7 +13,7 @@
       <div
         class="
           container max-w-2xl pt-12 pb-16
-          prose prose-a:underline-offset-2 prose-h1:tracking-tight prose-h1:mb-0 prose-pre:border
+          prose prose-a:underline-offset-2 prose-h1:tracking-tight prose-h1:mb-0 prose-pre:border prose-img:border
           lg:prose-lg lg:pt-16 lg:pb-16
         "
       >

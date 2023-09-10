@@ -124,7 +124,7 @@ On receiving a response, the app removes the successful changes (if any) from th
 
 Then, if there are failed changes, the app interrupts you with a dialog prompting you to discard the failed changes:
 
-![A screenshot of the sync conflict dialog](img)
+![A screenshot of the sync conflict dialog](/images/sync-conflict-screenshot.png)
 
 A change may fail due to a race condition, such as when you're using the app on two devices&mdash;say your phone and laptop&mdash;and the following sequence of events occur:
 
