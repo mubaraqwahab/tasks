@@ -39,7 +39,7 @@
             @endguest
           </p>
 
-          <p><img alt="A screenshot of the My tasks page of the app." class="aspect-video border" /></p>
+          <p><img alt="A screenshot of the My tasks page of the app." class="aspect-video border" src="/images/my-tasks-screenshot.png" /></p>
         </div>
         <hr />
 

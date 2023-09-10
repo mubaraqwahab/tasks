@@ -199,7 +199,7 @@ export default function Tasks({
           fallback={
             <div className="flex flex-col items-center justify-center py-6">
               <img
-                src="/undraw_nature_m5ll.svg"
+                src="/images/undraw_nature_m5ll.svg"
                 alt=""
                 className="w-36 sm:w-44 lg:w-48 mb-6 opacity-70"
               />
