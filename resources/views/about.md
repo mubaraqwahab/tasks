@@ -30,12 +30,6 @@ The app currently lacks many utility features like sorting and filtering tasks a
 
 The rest of this page describes how I built some interesting parts of this app as well as some challenges I faced and lessons I learnt.
 
-TODO: credits here?
-
-TODO: TOC here?
-
-<!-- TODO: heading IDs -->
-
 ## The optimistic UI
 
 The most exciting (and most difficult) feature to build was the optimistic UI, even though, ironically, the idea for it only came halfway into the app. My initial plan was to create a traditional server-rendered app, where actions like adding a new task would trigger a page reload to save the task to the server and show the task on the page. Soon after completing this, I found the user experience to be terrible and decided to improve it with an offline-first optimistic UI.
@@ -140,18 +134,3 @@ A sync conflict of this sort isn't the only possible sync error though. A networ
 ![A screenshot of the subtle sync error](img)
 
 It's worth noting that the IDs of the changes and tasks are random [UUIDs (universally unique identifiers)](https://en.wikipedia.org/wiki/Universally_unique_identifier), as opposed to, say, auto-incrementing integers. The reason for this is that the IDs need to be unique, even as they're generated on different devices (such as your phone and laptop). I learnt UUIDs are suited for this purpose.
-
-## Switching to Inertia
-
-Before the optimistic UI, I used Laravel's Blade templating engine to render the frontend of the app on the server, and sprinkles of JS for the interactivity on the client. And I continued thus when I started implementing the optimistic UI. However, I later switched to using React (via Inertia) and XState for two important reasons:
-
-- Controlling server components on the client side.
-- Expressing the logic of creating/deleting/modifying DOM nodes in response to user actions and server responses.
-
-Sth about how seemingly trivial features invite complexity...
-
-## Miscellaneous
-
-- Interface design
-- Accessibility in Inertia
-- Scoping requirements...
