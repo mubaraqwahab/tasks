@@ -19,7 +19,7 @@
       >
         <div class="">
           <h1>Tasks</h1>
-          <p class="lead">A simple to-do list app with an optimistic UI and offline mode, built by <a href="https://mubaraqwahab.com/">Mubaraq</a>.</p>
+          <p class="lead">A full-stack to-do list app with an optimistic UI and offline mode, built by <a href="https://mubaraqwahab.com/">Mubaraq</a>.</p>
           <p class="not-prose mb-[3em] lg:mb-[3em]">
             @auth
               <a
